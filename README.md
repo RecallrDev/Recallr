@@ -1,2 +1,1 @@
-# Recallr
-test
+# Recallr - advanced AI Helper for your studies.
