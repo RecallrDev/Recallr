@@ -1,0 +1,43 @@
+@import url("https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@400;500;700&display=swap");
+@import "tailwindcss";
+
+
+@layer base {
+  html {
+    /* Change global font here */
+    /* font-family: "Outfit", sans-serif; */
+  }
+}
+
+/* -- Flip-card helpers -- */
+.flip-card {
+  perspective: 1000px;
+  cursor: pointer;
+}
+
+.flip-card-inner {
+  @apply relative w-full h-full transition-transform duration-500;
+  transform-style: preserve-3d;
+}
+
+.flip-card:hover .flip-card-inner {
+  transform: rotateY(180deg);
+}
+
+/* front and back faces */
+.flip-card-front,
+.flip-card-back {
+  @apply absolute inset-0 rounded-lg;
+  backface-visibility: hidden;          /* hide when flipped away */
+}
+
+/* front face styling */
+.flip-card-front {
+  @apply flex flex-col items-center justify-center bg-gray-100 p-6;
+}
+
+/* back face: flipped 180° initially */
+.flip-card-back {
+  @apply flex flex-col items-center justify-center bg-white p-6;
+  transform: rotateY(180deg);
+}
