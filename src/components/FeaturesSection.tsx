@@ -40,13 +40,11 @@ const FeaturesSection: React.FC = () => {
   return (
     <section className="py-16 bg-white">
       <div className="container mx-auto px-4 text-center">
-        <SectionHeader title="Features" />
-        <h2 className="mt-2 text-3xl md:text-4xl font-bold text-gray-900">
-          Why our flashcards are better
-        </h2>
-        <p className="mt-2 text-gray-600 max-w-2xl mx-auto">
-          We have enhanced the proven Anki method with modern features to improve your learning experience.
-        </p>
+        <SectionHeader 
+          titlebox="Features" 
+          title="Why our flashcards are better" 
+          subtitle="We have enhanced the proven Anki method with modern features to improve your learning experience." 
+        />
 
         <div className="mt-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
           {features.map((feature, idx) => (
