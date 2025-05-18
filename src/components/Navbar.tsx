@@ -1,9 +1,10 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { HashLink } from 'react-router-hash-link';
 
 const Navbar: React.FC = () => {
   return (
-    <nav className="bg-white shadow-sm">
+    <nav className="bg-white shadow-sm sticky top-0 z-50">
       <div className="container mx-auto px-4 py-3 flex items-center justify-between">
         
         {/* Logo/Brand */}
@@ -16,9 +17,27 @@ const Navbar: React.FC = () => {
 
         {/* Navigation Links */}
         <div className="hidden md:flex items-center space-x-6 text-sm text-gray-700">
-          <Link to="/about" className="hover:text-purple-600 transition">About</Link>
-          <Link to="/team" className="hover:text-purple-600 transition">Team</Link>
-          <Link to="/contact" className="hover:text-purple-600 transition">Contact</Link>
+          <HashLink 
+            to="/#about" 
+            className="hover:text-purple-600 transition"
+            smooth
+          >
+            About
+          </HashLink>
+          <HashLink 
+            to="/#team" 
+            className="hover:text-purple-600 transition"
+            smooth
+          >
+            Team
+          </HashLink>
+          <HashLink 
+            to="/#contact" 
+            className="hover:text-purple-600 transition"
+            smooth
+          >
+            Contact
+          </HashLink>
         </div>
 
         {/* Auth Buttons */}

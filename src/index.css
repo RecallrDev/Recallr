@@ -41,3 +41,8 @@
   @apply flex flex-col items-center justify-center bg-white p-6;
   transform: rotateY(180deg);
 }
+
+/* scroll, this is for adjusting the height for the navbar when scrolling to one section via navbar so it clips perfect */
+html {
+  scroll-padding-top: 60px; 
+}

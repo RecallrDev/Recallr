@@ -38,7 +38,7 @@ const features = [
 
 const FeaturesSection: React.FC = () => {
   return (
-    <section className="py-16 bg-white">
+    <section id="features" className="py-16 bg-gradient-to-b from-purple-50 to-white">
       <div className="container mx-auto px-4 text-center">
         <SectionHeader 
           titlebox="Features" 
