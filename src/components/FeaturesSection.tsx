@@ -1,6 +1,7 @@
 import React from 'react';
 import { Zap, BookOpen, BarChart2, Users, Library, WifiOff } from 'lucide-react';
 import FlipCard from './FlipCard';
+import SectionHeader from './SectionHeader';
 
 const features = [
   {
@@ -39,9 +40,7 @@ const FeaturesSection: React.FC = () => {
   return (
     <section className="py-16 bg-white">
       <div className="container mx-auto px-4 text-center">
-        <span className="text-sm uppercase tracking-wide text-gray-500">
-          Features
-        </span>
+        <SectionHeader title="Features" />
         <h2 className="mt-2 text-3xl md:text-4xl font-bold text-gray-900">
           Why our flashcards are better
         </h2>

@@ -3,6 +3,8 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import IntroSection from './components/IntroSection';
 import FeaturesSection from './components/FeaturesSection';
+import HowItWorksSection from './components/HowItWorksSection';
+import Footer from './components/Footer';
 import './index.css';
 
 // Routes
@@ -18,6 +20,7 @@ const App: React.FC = () => {
         <Navbar />
         <IntroSection />
         <FeaturesSection />
+        <HowItWorksSection />
 
         <Routes>
           <Route path="/" element={<Home />} />
@@ -26,6 +29,7 @@ const App: React.FC = () => {
           <Route path="/contact" element={<Contact />} />
         </Routes>
       </div>
+      <Footer />
     </Router>
   );
 };
