@@ -44,5 +44,31 @@
 
 /* scroll, this is for adjusting the height for the navbar when scrolling to one section via navbar so it clips perfect */
 html {
-  scroll-padding-top: 60px; 
+  scroll-padding-top: 60px;
+  scroll-behavior: smooth; 
+}
+
+/*Blur effect base styles */
+.backdrop-blur-md {
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+}
+
+/* Fallback for browsers that don't support backdrop-filter */
+@supports not ((-webkit-backdrop-filter: blur(12px)) or (backdrop-filter: blur(12px))) {
+  .backdrop-blur-md {
+    background-color: rgba(255, 255, 255, 0.95) !important;
+  }
+}
+
+/* This smooths out all transitions */
+* {
+  transition-property: background-color, border-color, color, fill, stroke, opacity, box-shadow, transform, filter, backdrop-filter;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 150ms;
+}
+
+/* Optimize performance for transitions */
+.navbar-blur {
+  will-change: backdrop-filter, background-color, box-shadow;
 }

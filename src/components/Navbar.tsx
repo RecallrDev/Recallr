@@ -1,10 +1,37 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { HashLink } from 'react-router-hash-link';
 
 const Navbar: React.FC = () => {
+  // State to track if we've scrolled past a certain threshold
+  const [scrolled, setScrolled] = useState(false);
+
+  // Setup scroll event listener
+  useEffect(() => {
+    const handleScroll = () => {
+      const isScrolled = window.scrollY > 10;
+      if (isScrolled !== scrolled) {
+        setScrolled(isScrolled);
+      }
+    };
+
+    // Add scroll event listener
+    window.addEventListener('scroll', handleScroll);
+    
+    // Clean up event listener
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+    };
+  }, [scrolled]);
+
   return (
-    <nav className="bg-white shadow-sm sticky top-0 z-50">
+    <nav 
+      className={`sticky top-0 z-50 transition-all duration-300 ${
+        scrolled 
+          ? 'bg-white/80 backdrop-blur-md shadow-md' 
+          : 'bg-white shadow-sm'
+      }`}
+    >
       <div className="container mx-auto px-4 py-3 flex items-center justify-between">
         
         {/* Logo/Brand */}
