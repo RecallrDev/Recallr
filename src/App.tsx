@@ -5,13 +5,14 @@ import IntroSection from './components/IntroSection';
 import FeaturesSection from './components/FeaturesSection';
 import HowItWorksSection from './components/HowItWorksSection';
 import Footer from './components/Footer';
+import CallToActionSection from './components/CallToActionSection';
 import './index.css';
 
 // Routes
-const Home: React.FC = () => <div className="container mx-auto p-4"></div>;
-const About: React.FC = () => <div className="container mx-auto p-4">About Page</div>;
-const Team: React.FC = () => <div className="container mx-auto p-4">Team Page</div>;
-const Contact: React.FC = () => <div className="container mx-auto p-4">Contact Page</div>;
+const Home: React.FC = () => <div className="container mx-auto"></div>;
+const About: React.FC = () => <div className="container mx-auto">About Page</div>;
+const Team: React.FC = () => <div className="container mx-auto">Team Page</div>;
+const Contact: React.FC = () => <div className="container mx-auto">Contact Page</div>;
 
 const App: React.FC = () => {
   return (
@@ -21,6 +22,7 @@ const App: React.FC = () => {
         <IntroSection />
         <FeaturesSection />
         <HowItWorksSection />
+        <CallToActionSection />
 
         <Routes>
           <Route path="/" element={<Home />} />
