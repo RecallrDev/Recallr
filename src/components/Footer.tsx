@@ -8,7 +8,6 @@ import {
   FaLinkedinIn,
   FaTiktok,
 } from "react-icons/fa";
-import FooterColumn from "./FooterColumn";
 
 const Footer: React.FC = () => {
   // Product links
