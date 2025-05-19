@@ -38,7 +38,7 @@ const TeamSection: React.FC = () => {
 
   return (
     <section id="team" className="py-16 bg-purple-50">
-      <div className="container mx-auto px-4">
+      <div className="container mx-auto px-4 text-center">
         <SectionHeader
           titlebox="Our Team"
           title="Meet the people behind Recallr"

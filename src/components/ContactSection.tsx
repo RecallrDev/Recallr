@@ -4,7 +4,7 @@ import SectionHeader from './SectionHeader';
 const ContactSection: React.FC = () => {
   return (
     <section id="contact" className="py-16 bg-gradient-to-b from-white to-purple-50">
-      <div className="container mx-auto px-4">
+      <div className="container mx-auto px-4 text-center">
         <SectionHeader
           titlebox="Contact Us"
           title="Get in touch with our team"
