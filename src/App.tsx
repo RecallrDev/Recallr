@@ -9,6 +9,7 @@ import CallToActionSection from './components/CallToActionSection';
 import AboutSection from './components/AboutSection';
 import TeamSection from './components/TeamSection';
 import ContactSection from './components/ContactSection';
+import BattleSection from './components/BattleSection';
 import './index.css';
 
 const App: React.FC = () => {
@@ -17,9 +18,10 @@ const App: React.FC = () => {
       <div className="App">
         <Navbar />
         <IntroSection />
-        <FeaturesSection />
+        {/* <FeaturesSection /> */}
         <HowItWorksSection />
         <AboutSection />
+        <BattleSection />
         <TeamSection />
         <ContactSection />
         <CallToActionSection />

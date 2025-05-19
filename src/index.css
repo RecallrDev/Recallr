@@ -61,14 +61,23 @@ html {
   }
 }
 
-/* This smooths out all transitions */
-* {
-  transition-property: background-color, border-color, color, fill, stroke, opacity, box-shadow, transform, filter, backdrop-filter;
-  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-  transition-duration: 150ms;
-}
-
 /* Optimize performance for transitions */
 .navbar-blur {
   will-change: backdrop-filter, background-color, box-shadow;
+}
+
+@layer utilities {
+  .backface-hidden {
+    backface-visibility: hidden;
+  }
+}
+
+@layer utilities {
+  @keyframes float {
+    0%, 100% { transform: translateY(0) }
+    50%      { transform: translateY(-8px) }
+  }
+  .animate-float {
+    animation: float 6s ease-in-out infinite;
+  }
 }

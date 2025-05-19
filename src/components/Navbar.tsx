@@ -35,12 +35,16 @@ const Navbar: React.FC = () => {
       <div className="container mx-auto px-4 py-3 flex items-center justify-between">
         
         {/* Logo/Brand */}
-        <Link to="/" className="flex items-center space-x-2">
+        <HashLink
+          to="/#"
+          smooth
+          className="flex items-center space-x-2"
+        >
           <div className="bg-purple-600 text-white rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold">
             R
           </div>
           <span className="text-purple-600 font-semibold text-lg">Recallr</span>
-        </Link>
+        </HashLink>
 
         {/* Navigation Links */}
         <div className="hidden md:flex items-center space-x-6 text-sm text-gray-700">
