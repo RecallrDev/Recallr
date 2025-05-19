@@ -3,6 +3,12 @@ import { Link } from 'react-router-dom';
 import { HashLink } from 'react-router-hash-link';
 import { Menu, X } from 'lucide-react';
 
+const scrollWithOffset = (el: HTMLElement) => {
+  const yCoordinate = el.getBoundingClientRect().top + window.pageYOffset;
+  const yOffset = -350;
+  window.scrollTo({ top: yCoordinate + yOffset, behavior: 'smooth'});
+}
+
 const Navbar: React.FC = () => {
   // State to track if we've scrolled past a certain threshold
   const [scrolled, setScrolled] = useState(false);
@@ -145,6 +151,7 @@ const Navbar: React.FC = () => {
               to="/#about" 
               className="px-4 py-3 text-gray-700 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition mobile-nav-item"
               smooth
+              scroll={el => scrollWithOffset(el)}
               onClick={closeMobileMenu}
             >
               About
@@ -153,6 +160,7 @@ const Navbar: React.FC = () => {
               to="/#team" 
               className="px-4 py-3 text-gray-700 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition mobile-nav-item"
               smooth
+              scroll={el => scrollWithOffset(el)}
               onClick={closeMobileMenu}
             >
               Team
@@ -161,6 +169,7 @@ const Navbar: React.FC = () => {
               to="/#contact" 
               className="px-4 py-3 text-gray-700 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition mobile-nav-item"
               smooth
+              scroll={el => scrollWithOffset(el)}
               onClick={closeMobileMenu}
             >
               Contact
