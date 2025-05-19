@@ -1,17 +1,18 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
+import React from "react";
+import { Link } from "react-router-dom";
+import IntroFlashCard from "./IntroFlashCard";
 
 const IntroSection: React.FC = () => {
   return (
     <section className="bg-purple-50 py-16">
       <div className="container mx-auto px-4 flex flex-col md:flex-row items-center justify-between space-y-10 md:space-y-0">
-        
+
         {/* Left Text Content */}
         <div className="max-w-xl">
           <span className="text-xs uppercase tracking-wide text-purple-600 font-medium">
             Revolutionize Your Learning
           </span>
-          
+
           <h1 className="mt-3 text-4xl md:text-5xl font-extrabold text-gray-900 leading-tight">
             Anki Decks, <span className="text-purple-600">improved</span><br />
             for optimal learning
@@ -37,17 +38,34 @@ const IntroSection: React.FC = () => {
           </div>
         </div>
 
-        {/* Right Visual Box */}
-        <div className="w-full md:w-1/2 flex justify-center">
-          <div className="bg-white shadow-md rounded-xl p-6 w-80 text-center">
-            <div className="bg-gray-100 h-40 mb-4 rounded-md flex items-center justify-center">
-              {/* Placeholder Icon */}
-              <span className="text-gray-400 text-3xl">+</span>
-            </div>
-            <h3 className="text-lg font-semibold">Intelligent Flashcards</h3>
-            <p className="mt-2 text-sm text-gray-600">
-              Our AI adapts to your learning behavior and optimizes your study time.
-            </p>
+        {/* Flashcards, hidden on mobile */}
+        <div className="w-full md:w-1/2 hidden md:flex flex-wrap justify-center gap-x-15 gap-y-6">
+
+          {/* 1st card */}
+          <div className="rotate-[-6deg] animate-float">
+            <IntroFlashCard
+              frontHeading="Biology"
+              frontText="What is the difference between mitosis and meiosis?"
+              backText="Mitosis produces two genetically identical cells; meiosis produces four genetically diverse gametes."
+            />
+          </div>
+
+          {/* 2nd card */}
+          <div className="rotate-[3deg] animate-float delay-150">
+            <IntroFlashCard
+              frontHeading="Mathematics"
+              frontText="How do you calculate the derivative of f(x) = x²?"
+              backText="f'(x) = 2x – apply the power rule."
+            />
+          </div>
+
+          {/* 3rd card */}
+          <div className="rotate-[1deg] animate-float delay-300">
+            <IntroFlashCard
+              frontHeading="History"
+              frontText="What were the main causes of World War I?"
+              backText="Imperialism, militarism, alliance systems, and nationalism."
+            />
           </div>
         </div>
       </div>

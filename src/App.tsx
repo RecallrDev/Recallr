@@ -17,7 +17,7 @@ const App: React.FC = () => {
       <div className="App">
         <Navbar />
         <IntroSection />
-        <FeaturesSection />
+        {/* <FeaturesSection /> */}
         <HowItWorksSection />
         <AboutSection />
         <TeamSection />
