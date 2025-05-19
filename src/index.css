@@ -61,14 +61,123 @@ html {
   }
 }
 
-/* This smooths out all transitions */
+/* This smooths out all transitions 
 * {
   transition-property: background-color, border-color, color, fill, stroke, opacity, box-shadow, transform, filter, backdrop-filter;
   transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
   transition-duration: 150ms;
-}
+} */
 
 /* Optimize performance for transitions */
 .navbar-blur {
   will-change: backdrop-filter, background-color, box-shadow;
+}
+
+/* Mobile menu animation */
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.mobile-menu-open {
+  animation: slideDown 0.3s ease-out forwards;
+}
+
+/* Fix for iOS devices with home indicator */
+@supports (padding: max(0px)) {
+  .fixed-nav {
+    padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
+  }
+}
+
+/* Improve touch targets on mobile */
+@media (max-width: 768px) {
+  .mobile-nav-item {
+    min-height: 44px; /* Minimum touch target size */
+  }
+}
+
+/* Active link styles */
+.nav-link.active {
+  color: #9333ea; /* purple-600 */
+  font-weight: 500;
+}
+
+/* Burger menu button hover effect */
+.burger-button {
+  position: relative;
+  transition: transform 0.2s;
+}
+
+.burger-button:hover {
+  transform: scale(1.1);
+}
+
+/* Mobile menu animation */
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.mobile-menu-open {
+  animation: slideDown 0.3s ease-out forwards;
+}
+
+.mobile-menu-content {
+  transition: transform 0.4s ease;
+}
+
+/* Smooth max-height transition */
+@keyframes expandDown {
+  from { max-height: 0; }
+  to { max-height: 500px; }
+}
+
+@keyframes collapseUp {
+  from { max-height: 500px; }
+  to { max-height: 0; }
+}
+
+.menu-expand {
+  animation: expandDown 0.3s ease forwards;
+  overflow: hidden;
+}
+
+.menu-collapse {
+  animation: collapseUp 0.3s ease forwards;
+  overflow: hidden;
+}
+
+/* Hamburger button styling */
+.burger-line {
+  transition: all 0.3s cubic-bezier(0.645, 0.045, 0.355, 1);
+  width: 24px;
+  height: 2px;
+  background-color: #4B5563;
+}
+
+/* Fix for iOS devices with home indicator */
+@supports (padding: max(0px)) {
+  .fixed-nav {
+    padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
+  }
+}
+
+/* Improve touch targets on mobile */
+@media (max-width: 768px) {
+  .mobile-nav-item {
+    min-height: 44px; /* Minimum touch target size */
+  }
 }
