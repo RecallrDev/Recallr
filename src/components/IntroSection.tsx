@@ -14,7 +14,7 @@ const IntroSection: React.FC = () => {
           </span>
 
           <h1 className="mt-3 text-4xl md:text-5xl font-extrabold text-gray-900 leading-tight">
-            Anki Decks, <span className="text-purple-600">improved</span><br />
+            Anki-Decks, <span className="text-purple-600">improved</span><br />
             for optimal learning
           </h1>
           <p className="mt-4 text-gray-700 text-lg">
