@@ -2,10 +2,9 @@ import React from 'react';
 import SectionHeader from './SectionHeader';
 import NumberedStep from './NumberedStep';
 
-
 const HowItWorksSection: React.FC = () => {
     return (
-        <section className="bg-white py-16">
+        <section id="how-it-works" className="bg-purple-50 py-16">
             <div className="container mx-auto px-4 text-center">
                 <SectionHeader 
                     titlebox="How it works" 
@@ -35,7 +34,6 @@ const HowItWorksSection: React.FC = () => {
                         description="Use our powerful tools to enhance your learning experience."
                     />
                 </div>
-
             </div>
         </section>
     );

@@ -1,18 +1,15 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import IntroSection from './components/IntroSection';
 import FeaturesSection from './components/FeaturesSection';
 import HowItWorksSection from './components/HowItWorksSection';
 import Footer from './components/Footer';
 import CallToActionSection from './components/CallToActionSection';
+import AboutSection from './components/AboutSection';
+import TeamSection from './components/TeamSection';
+import ContactSection from './components/ContactSection';
 import './index.css';
-
-// Routes
-const Home: React.FC = () => <div className="container mx-auto"></div>;
-const About: React.FC = () => <div className="container mx-auto">About Page</div>;
-const Team: React.FC = () => <div className="container mx-auto">Team Page</div>;
-const Contact: React.FC = () => <div className="container mx-auto">Contact Page</div>;
 
 const App: React.FC = () => {
   return (
@@ -22,14 +19,10 @@ const App: React.FC = () => {
         <IntroSection />
         <FeaturesSection />
         <HowItWorksSection />
+        <AboutSection />
+        <TeamSection />
+        <ContactSection />
         <CallToActionSection />
-
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/about" element={<About />} />
-          <Route path="/team" element={<Team />} />
-          <Route path="/contact" element={<Contact />} />
-        </Routes>
       </div>
       <Footer />
     </Router>

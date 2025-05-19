@@ -1,5 +1,6 @@
 import React from "react";
 import { Link } from "react-router-dom";
+import { HashLink } from "react-router-hash-link";
 import {
   FaFacebookF,
   FaTwitter,
@@ -7,9 +8,31 @@ import {
   FaLinkedinIn,
   FaTiktok,
 } from "react-icons/fa";
-import FooterColumn from "./FooterColumn";
 
 const Footer: React.FC = () => {
+  // Product links
+  const productLinks = [
+    { name: "Features", path: "/#features" },
+    { name: "How It Works", path: "/#how-it-works" },
+    { name: "Prices", path: "/#pricing" },
+    { name: "FAQ", path: "/#faq" }
+  ];
+
+  // Company links
+  const companyLinks = [
+    { name: "About Us", path: "/#about" },
+    { name: "Team", path: "/#team" },
+    { name: "Contact", path: "/#contact" }
+  ];
+
+  // Legal links
+  const legalLinks = [
+    { name: "Privacy Policy", path: "/privacy" },
+    { name: "Terms of Service", path: "/terms" },
+    { name: "Imprint", path: "/imprint" },
+    { name: "Cookie Settings", path: "/cookies" }
+  ];
+
   return (
     <footer className="bg-white border-t border-gray-200">
       <div className="mx-auto max-w-7xl px-6 py-12">
@@ -45,18 +68,58 @@ const Footer: React.FC = () => {
             </div>
           </div>
 
-          <FooterColumn
-            title="Product"
-            links={["Features", "Prices", "FAQ"]}
-          />
-          <FooterColumn
-            title="Company"
-            links={["About Us", "Team", "Contact"]}
-          />
-          <FooterColumn
-            title="Legal"
-            links={["Privacy Policy", "Terms of Service", "Imprint", "Cookie Settings"]}
-          />
+          {/* Product Column */}
+          <div>
+            <h3 className="mb-4 text-sm font-semibold text-gray-900">Product</h3>
+            <ul className="space-y-2">
+              {productLinks.map((link) => (
+                <li key={link.name}>
+                  <HashLink
+                    to={link.path}
+                    smooth
+                    className="text-sm text-gray-500 hover:text-purple-600 transition-colors"
+                  >
+                    {link.name}
+                  </HashLink>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Company Column */}
+          <div>
+            <h3 className="mb-4 text-sm font-semibold text-gray-900">Company</h3>
+            <ul className="space-y-2">
+              {companyLinks.map((link) => (
+                <li key={link.name}>
+                  <HashLink
+                    to={link.path}
+                    smooth
+                    className="text-sm text-gray-500 hover:text-purple-600 transition-colors"
+                  >
+                    {link.name}
+                  </HashLink>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Legal Column */}
+          <div>
+            <h3 className="mb-4 text-sm font-semibold text-gray-900">Legal</h3>
+            <ul className="space-y-2">
+              {legalLinks.map((link) => (
+                <li key={link.name}>
+                  <Link
+                    to={link.path}
+                    className="text-sm text-gray-500 hover:text-purple-600 transition-colors"
+                  >
+                    {link.name}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
         </div>
       </div>
     </footer>

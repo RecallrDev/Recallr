@@ -1,9 +1,37 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { HashLink } from 'react-router-hash-link';
 
 const Navbar: React.FC = () => {
+  // State to track if we've scrolled past a certain threshold
+  const [scrolled, setScrolled] = useState(false);
+
+  // Setup scroll event listener
+  useEffect(() => {
+    const handleScroll = () => {
+      const isScrolled = window.scrollY > 10;
+      if (isScrolled !== scrolled) {
+        setScrolled(isScrolled);
+      }
+    };
+
+    // Add scroll event listener
+    window.addEventListener('scroll', handleScroll);
+    
+    // Clean up event listener
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+    };
+  }, [scrolled]);
+
   return (
-    <nav className="bg-white shadow-sm">
+    <nav 
+      className={`sticky top-0 z-50 transition-all duration-300 ${
+        scrolled 
+          ? 'bg-white/80 backdrop-blur-md shadow-md' 
+          : 'bg-white shadow-sm'
+      }`}
+    >
       <div className="container mx-auto px-4 py-3 flex items-center justify-between">
         
         {/* Logo/Brand */}
@@ -16,9 +44,27 @@ const Navbar: React.FC = () => {
 
         {/* Navigation Links */}
         <div className="hidden md:flex items-center space-x-6 text-sm text-gray-700">
-          <Link to="/about" className="hover:text-purple-600 transition">About</Link>
-          <Link to="/team" className="hover:text-purple-600 transition">Team</Link>
-          <Link to="/contact" className="hover:text-purple-600 transition">Contact</Link>
+          <HashLink 
+            to="/#about" 
+            className="hover:text-purple-600 transition"
+            smooth
+          >
+            About
+          </HashLink>
+          <HashLink 
+            to="/#team" 
+            className="hover:text-purple-600 transition"
+            smooth
+          >
+            Team
+          </HashLink>
+          <HashLink 
+            to="/#contact" 
+            className="hover:text-purple-600 transition"
+            smooth
+          >
+            Contact
+          </HashLink>
         </div>
 
         {/* Auth Buttons */}
