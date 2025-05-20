@@ -1,6 +1,6 @@
 import React from 'react';
 import { BookOpen, Brain, Users } from 'lucide-react';
-import SectionHeader from './SectionHeader';
+import SectionHeader from '../Cosmetics/SectionHeader';
 
 const AboutSection: React.FC = () => {
   const features = [

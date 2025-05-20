@@ -1,7 +1,7 @@
 import React from 'react';
 import { Zap, BookOpen, BarChart2, Users, Library, WifiOff } from 'lucide-react';
-import FlipCard from './FlipCard';
-import SectionHeader from './SectionHeader';
+import FlipCard from '../Cosmetics/FlipCard';
+import SectionHeader from '../Cosmetics/SectionHeader';
 
 const features = [
   {

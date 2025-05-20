@@ -1,5 +1,5 @@
 import React from "react";
-import TeamCard from "./TeamCard";
+import TeamCard from "../Cosmetics/TeamCard";
 
 const BattleSection: React.FC = () => (
   <section className="relative isolate overflow-hidden">

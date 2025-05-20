@@ -1,6 +1,6 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import IntroFlashCard from "./IntroFlashCard";
+import IntroFlashCard from "../Cosmetics/IntroFlashCard";
 
 const IntroSection: React.FC = () => {
   return (

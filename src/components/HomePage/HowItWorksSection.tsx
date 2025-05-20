@@ -1,6 +1,6 @@
 import React from 'react';
-import SectionHeader from './SectionHeader';
-import NumberedStep from './NumberedStep';
+import SectionHeader from '../Cosmetics/SectionHeader';
+import NumberedStep from '../Cosmetics/NumberedStep';
 
 const HowItWorksSection: React.FC = () => {
     return (

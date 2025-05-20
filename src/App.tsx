@@ -1,16 +1,16 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import Navbar from './components/Navbar';
-import IntroSection from './components/IntroSection';
+import Navbar from './components/Navigation/Navbar';
+import IntroSection from './components/HomePage/IntroSection';
 // import FeaturesSection from './components/FeaturesSection';
-import HowItWorksSection from './components/HowItWorksSection';
-import Footer from './components/Footer';
-import CallToActionSection from './components/CallToActionSection';
-import AboutSection from './components/AboutSection';
-import TeamSection from './components/TeamSection';
-import ContactSection from './components/ContactSection';
-import BattleSection from './components/BattleSection';
-import UploadPage from './components/UploadPage';
+import HowItWorksSection from './components/HomePage/HowItWorksSection';
+import Footer from './components/Navigation/Footer';
+import CallToActionSection from './components/HomePage/CallToActionSection';
+import AboutSection from './components/HomePage/AboutSection';
+import TeamSection from './components/HomePage/TeamSection';
+import ContactSection from './components/HomePage/ContactSection';
+import BattleSection from './components/HomePage/BattleSection';
+import UploadPage from './components/UploadPage/UploadPage';
 import './index.css';
 
 const HomePage: React.FC = () => {
