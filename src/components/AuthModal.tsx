@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { X, Mail, Lock, UserPlus, LogIn, User } from 'lucide-react';
 import { supabase } from '../supabase/client';
 import { useNavigate } from 'react-router-dom';
+import SocialLoginButtons from './SocialLoginButtons';
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -229,6 +230,8 @@ const handleSignUp = async (e: React.FormEvent) => {
                   {loading ? 'Wird eingeloggt...' : 'Sign in'}
                 </button>
               </form>
+
+              <SocialLoginButtons view="login" />
               
               <div className="mt-6 text-center">
                 <p className="text-sm text-gray-600">
@@ -357,6 +360,8 @@ const handleSignUp = async (e: React.FormEvent) => {
                   {loading ? 'Erstelle Konto...' : 'Create account'}
                 </button>
               </form>
+
+              <SocialLoginButtons view="register" />
               
               <div className="mt-6 text-center">
                 <p className="text-sm text-gray-600">

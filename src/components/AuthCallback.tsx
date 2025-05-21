@@ -7,35 +7,79 @@ const AuthCallback: React.FC = () => {
   const navigate = useNavigate();
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [message, setMessage] = useState('Authentifizierung wird verarbeitet...');
 
   useEffect(() => {
     const handleAuthCallback = async () => {
       try {
         setLoading(true);
         
-        // An diesem Punkt wird der Auth-Callback automatisch von Supabase verarbeitet
+        // Session abrufen
         const { data, error } = await supabase.auth.getSession();
         
         if (error) {
           throw error;
         }
         
-        // Nach kurzer Verzögerung zur Profilseite weiterleiten
-        setTimeout(() => {
-          if (data.session) {
-            navigate('/profile');
-          } else {
-            navigate('/');
+        // Profil überprüfen bei OAuth-Login
+        if (data.session) {
+          try {
+            // Prüfen, ob ein Profil existiert
+            const { data: profileData, error: profileError } = await supabase
+              .from('profiles')
+              .select('*')
+              .eq('id', data.session.user.id)
+              .single();
+              
+            if (profileError || !profileData) {
+              // Wenn kein Profil existiert, eines erstellen
+              const userMetadata = data.session.user.user_metadata;
+              const fullName = userMetadata.full_name || 
+                               userMetadata.name || 
+                               userMetadata.user_name || 
+                               'Benutzer';
+                               
+              const { error: insertError } = await supabase
+                .from('profiles')
+                .insert({
+                  id: data.session.user.id,
+                  full_name: fullName,
+                  username: '',
+                  avatar_url: userMetadata.avatar_url || null,
+                  updated_at: new Date().toISOString()
+                });
+                
+              if (insertError) {
+                console.warn('Fehler beim Erstellen des Profils:', insertError);
+                // Nicht kritisch, weitermachen
+              }
+            }
+          } catch (profileCheckError) {
+            console.warn('Fehler beim Überprüfen des Profils:', profileCheckError);
+            // Nicht kritisch, weitermachen
           }
-        }, 2000);
+          
+          setMessage('Authentifizierung erfolgreich!');
+          
+          // Nach kurzer Verzögerung zur Profilseite weiterleiten
+          setTimeout(() => {
+            navigate('/profile');
+          }, 1500);
+        } else {
+          // Wenn keine Session vorhanden ist, zur Startseite weiterleiten
+          setMessage('Keine aktive Sitzung gefunden.');
+          setTimeout(() => {
+            navigate('/');
+          }, 1500);
+        }
       } catch (error: any) {
-        console.error('Fehler im Auth-Callback:', error.message);
-        setError(error.message);
+        console.error('Fehler im Auth-Callback:', error);
+        setError(error.message || 'Ein Fehler ist aufgetreten.');
         
         // Bei Fehler nach kurzer Verzögerung zur Startseite weiterleiten
         setTimeout(() => {
           navigate('/');
-        }, 3000);
+        }, 2000);
       } finally {
         setLoading(false);
       }
@@ -50,7 +94,7 @@ const AuthCallback: React.FC = () => {
         {loading ? (
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto"></div>
-            <h2 className="mt-6 text-xl font-bold text-gray-800">Authentifizierung wird verarbeitet...</h2>
+            <h2 className="mt-6 text-xl font-bold text-gray-800">{message}</h2>
             <p className="mt-2 text-gray-600">Bitte warten, du wirst gleich weitergeleitet.</p>
           </div>
         ) : error ? (
@@ -63,8 +107,8 @@ const AuthCallback: React.FC = () => {
         ) : (
           <div className="text-center">
             <CheckCircle className="h-12 w-12 text-green-600 mx-auto" />
-            <h2 className="mt-2 text-xl font-bold text-gray-800">Authentifizierung erfolgreich</h2>
-            <p className="mt-2 text-gray-600">Du wirst zur Profilseite weitergeleitet...</p>
+            <h2 className="mt-2 text-xl font-bold text-gray-800">{message}</h2>
+            <p className="mt-2 text-gray-600">Du wirst weitergeleitet...</p>
           </div>
         )}
       </div>
