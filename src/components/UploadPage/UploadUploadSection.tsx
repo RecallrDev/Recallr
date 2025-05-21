@@ -2,9 +2,10 @@ import React, { useRef, useState } from "react";
 import type { ChangeEvent } from "react";
 import IntroFlashCard from "../Cosmetics/IntroFlashCard";
 
-
 const UploadUploadSection: React.FC = () => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [jsonOutput, setJsonOutput] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const handleFileSelect = (e: ChangeEvent<HTMLInputElement>) => {
@@ -14,8 +15,8 @@ const UploadUploadSection: React.FC = () => {
       return;
     }
     const file = files[0];
-    if (!file.name.toLowerCase().endsWith(".apkg")) {
-      alert("Only .apkg files are allowed.");
+    if (!file.name.toLowerCase().endsWith(".txt")) {
+      alert("Only .txt files are allowed.");
       if (inputRef.current) inputRef.current.value = "";
       setSelectedFile(null);
       return;
@@ -23,14 +24,20 @@ const UploadUploadSection: React.FC = () => {
     setSelectedFile(file);
   };
 
-  const handleUploadClick = () => {
+  const handleUploadClick = async () => {
+    setError(null);
+    setJsonOutput(null);
+
     if (!selectedFile) {
-      alert("Please select an .apkg file first.");
+      setError("Please select an .txt file first.");
       return;
     }
-    // Hier später den echten Upload-Call einfügen
-    console.log("Would upload:", selectedFile);
-    alert(`File "${selectedFile.name}" is being uploaded.`);
+
+    console.log("Uploading file:", selectedFile);
+    const formData = new FormData();
+    formData.append("file", selectedFile);
+
+    console.log("FormData:", formData);
   };
 
   return (
@@ -100,12 +107,12 @@ const UploadUploadSection: React.FC = () => {
 
           {/* File Input */}
           <label className="block mb-2 font-medium text-gray-700">
-            Choose a .apkg file:
+            Choose a .txt file:
           </label>
           <input
             ref={inputRef}
             type="file"
-            accept=".apkg"
+            accept=".txt"
             onChange={handleFileSelect}
             className="
               block w-full text-sm text-gray-700
@@ -121,10 +128,27 @@ const UploadUploadSection: React.FC = () => {
           {/* Upload Button */}
           <button
             onClick={handleUploadClick}
-            className="mt-6 w-full bg-purple-600 text-white font-semibold py-2 rounded-lg hover:bg-purple-700 transition"
+            disabled={!selectedFile || !selectedFile.name.toLowerCase().endsWith(".txt")}
+            className={`
+              mt-6 w-full font-semibold py-2 rounded-lg transition
+              ${!selectedFile || !selectedFile.name.toLowerCase().endsWith(".txt")
+                ? "bg-gray-400 cursor-not-allowed"
+                : "bg-purple-600 hover:bg-purple-700 text-white"
+              }
+            `}
           >
             Upload
           </button>
+
+          {error && <p className="mt-4 text-red-600">Error: {error}</p>}
+          {jsonOutput && (
+            <div className="mt-4">
+              <h3 className="font-medium">JSON Output:</h3>
+              <pre className="mt-2 bg-gray-100 p-2 rounded overflow-x-auto">
+                {jsonOutput}
+              </pre>
+            </div>
+          )}
         </div>
       </div>
     </section>
