@@ -11,6 +11,7 @@ import TeamSection from './components/TeamSection';
 import ContactSection from './components/ContactSection';
 import ProfilePage from './components/ProfilePage';
 import AuthCallback from './components/AuthCallback';
+import ResetPasswordPage from './components/ResetPasswordPage';
 import AuthModal from './components/AuthModal';
 import { AuthProvider } from './components/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -57,6 +58,7 @@ const App: React.FC = () => {
           <Routes>
             <Route path="/" element={<HomePage />} />
             <Route path="/auth/callback" element={<AuthCallback />} />
+            <Route path="/reset-password" element={<ResetPasswordPage />} />
             <Route
               path="/profile"
               element={

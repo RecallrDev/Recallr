@@ -3,6 +3,7 @@ import { X, Mail, Lock, UserPlus, LogIn, User } from 'lucide-react';
 import { supabase } from '../supabase/client';
 import { useNavigate } from 'react-router-dom';
 import SocialLoginButtons from './SocialLoginButtons';
+import ForgotPasswordModal from './ForgotPasswordModal';
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -22,6 +23,7 @@ const AuthModal: React.FC<AuthModalProps> = ({
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
   const navigate = useNavigate();
   
   // Reset state when modal is closed or initialView changes
@@ -75,54 +77,97 @@ const AuthModal: React.FC<AuthModalProps> = ({
         }, 1000);
       }
     } catch (error: any) {
-      console.error('Fehler beim Einloggen:', error.message);
+      console.error('Fehler beim Einloggen:', error);
       setErrorMessage(error.message || 'Fehler beim Einloggen');
     } finally {
       setLoading(false);
     }
   };
 
-// Minimale Version zum Testen
-const handleSignUp = async (e: React.FormEvent) => {
-  e.preventDefault();
-  
-  if (!email || !password) {
-    setErrorMessage('Bitte gib deine E-Mail und dein Passwort ein');
-    return;
-  }
-  
-  try {
-    setLoading(true);
-    setErrorMessage('');
+  // Handle sign up with Supabase
+  const handleSignUp = async (e: React.FormEvent) => {
+    e.preventDefault();
     
-    // Einfachste Form der Registrierung ohne zusätzliche Optionen
-    console.log("Beginne einfache Registrierung mit:", email);
-    
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password
-      // Keine zusätzlichen Optionen, um Komplexität zu reduzieren
-    });
-    
-    console.log("Registrierungsergebnis:", { data, error });
-
-    if (error) {
-      throw error;
+    if (!email || !password || !name) {
+      setErrorMessage('Bitte fülle alle Felder aus');
+      return;
     }
+    
+    try {
+      setLoading(true);
+      setErrorMessage('');
+      
+      // 1. Benutzer registrieren
+      const { data: authData, error: authError } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            full_name: name,
+          },
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
+        },
+      });
 
-    if (data?.user) {
-      setSuccessMessage(`Registrierung erfolgreich! Eine Bestätigungs-E-Mail wurde an ${email} gesendet.`);
+      if (authError) {
+        throw authError;
+      }
+
+      if (authData?.user) {
+        // 2. Manuell ein Profil erstellen
+        try {
+          const { error: profileError } = await supabase
+            .from('profiles')
+            .insert({
+              id: authData.user.id,
+              full_name: name,
+              username: '', // Optional kannst du hier eine Standard-Username setzen
+              avatar_url: '',
+              updated_at: new Date().toISOString(),
+            });
+            
+          if (profileError) {
+            console.error('Fehler beim Erstellen des Profils:', profileError.message);
+            // Wir werfen hier keinen Fehler, da der Benutzer bereits erstellt wurde
+          }
+        } catch (profileCreateError) {
+          console.error('Unerwarteter Fehler beim Profil erstellen:', profileCreateError);
+        }
+        
+        // Erfolgreich registriert
+        setSuccessMessage('Registrierung erfolgreich! Bitte bestätige deine E-Mail-Adresse.');
+      }
+    } catch (error: any) {
+      console.error('Fehler bei der Registrierung:', error.message);
+      setErrorMessage(error.message || 'Fehler bei der Registrierung');
+    } finally {
+      setLoading(false);
     }
-  } catch (error: any) {
-    console.error('Fehler bei der Registrierung:', error);
-    setErrorMessage(error.message || 'Fehler bei der Registrierung');
-  } finally {
-    setLoading(false);
-  }
-};
+  };
+
+  // "Passwort vergessen" Modal anzeigen
+  const openForgotPassword = () => {
+    setShowForgotPassword(true);
+  };
+
+  // "Passwort vergessen" Modal schließen
+  const closeForgotPassword = () => {
+    setShowForgotPassword(false);
+  };
 
   // If modal is not open, don't render anything
   if (!isOpen) return null;
+
+  // Wenn das "Passwort vergessen" Modal geöffnet ist, zeige das
+  if (showForgotPassword) {
+    return (
+      <ForgotPasswordModal 
+        isOpen={showForgotPassword} 
+        onClose={onClose} 
+        onBack={() => setShowForgotPassword(false)} 
+      />
+    );
+  }
 
   return (
     <div 
@@ -216,9 +261,13 @@ const handleSignUp = async (e: React.FormEvent) => {
                   </div>
                   
                   <div className="text-sm">
-                    <a href="#" className="font-medium text-purple-600 hover:text-purple-500">
-                      Forgot password?
-                    </a>
+                    <button 
+                      type="button"
+                      onClick={openForgotPassword}
+                      className="font-medium text-purple-600 hover:text-purple-500"
+                    >
+                      Passwort vergessen?
+                    </button>
                   </div>
                 </div>
                 
@@ -230,7 +279,8 @@ const handleSignUp = async (e: React.FormEvent) => {
                   {loading ? 'Wird eingeloggt...' : 'Sign in'}
                 </button>
               </form>
-
+              
+              {/* Social Login Buttons */}
               <SocialLoginButtons view="login" />
               
               <div className="mt-6 text-center">
@@ -328,6 +378,7 @@ const handleSignUp = async (e: React.FormEvent) => {
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       required
+                      minLength={6}
                     />
                   </div>
                 </div>
@@ -360,7 +411,8 @@ const handleSignUp = async (e: React.FormEvent) => {
                   {loading ? 'Erstelle Konto...' : 'Create account'}
                 </button>
               </form>
-
+              
+              {/* Social Login Buttons */}
               <SocialLoginButtons view="register" />
               
               <div className="mt-6 text-center">
