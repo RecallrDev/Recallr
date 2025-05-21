@@ -174,3 +174,138 @@ html {
     min-height: 44px; /* Minimum touch target size */
   }
 }
+
+/* Schon vorhandene Styles (können entfernt werden, falls redundant) */
+.flip-card {
+  perspective: 1000px;
+}
+
+/* Auth Modal spezifische Styles - Hinzufügen */
+.auth-modal-overlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  z-index: 50;
+  padding: 1rem;
+  overflow: hidden;
+}
+
+/* Bessere Zentrierung und Transition für die Flip-Card */
+.auth-flip-container {
+  width: 100%;
+  max-width: 28rem; /* 448px / max-w-md */
+  perspective: 1000px;
+  margin: auto;
+  will-change: transform; /* Performance-Optimierung */
+}
+
+.auth-flipper {
+  position: relative;
+  width: 100%;
+  transition: transform 0.7s;
+  transform-style: preserve-3d;
+}
+
+/* Hilfsklasse für gedrehte Karte */
+.auth-flipper.is-flipped {
+  transform: rotateY(180deg);
+}
+
+/* Front und Back Karten-Styles */
+.auth-card-face {
+  position: absolute;
+  width: 100%;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  background-color: white;
+  border-radius: 0.75rem; /* rounded-xl */
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  overflow: hidden;
+}
+
+.auth-card-back {
+  transform: rotateY(180deg);
+}
+
+/* Fix für iOS devices */
+@supports (padding: max(0px)) {
+  .auth-modal-overlay {
+    padding-bottom: max(1rem, env(safe-area-inset-bottom));
+  }
+}
+
+/* Auth Modal spezifische Styles */
+.auth-modal-overlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  z-index: 50;
+  padding: 1rem;
+}
+
+/* Bessere Zentrierung und Transition für die Flip-Card */
+.auth-flip-container {
+  width: 100%;
+  max-width: 28rem; /* 448px / max-w-md */
+  perspective: 1000px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: min-content;
+  will-change: transform; /* Performance-Optimierung */
+}
+
+.auth-flipper {
+  position: relative;
+  width: 100%;
+  transition: transform 0.7s;
+  transform-style: preserve-3d;
+}
+
+/* Hilfsklasse für gedrehte Karte */
+.auth-flipper.is-flipped {
+  transform: rotateY(180deg);
+}
+
+/* Front und Back Karten-Styles */
+.auth-card-face {
+  width: 100%;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  background-color: white;
+  border-radius: 0.75rem; /* rounded-xl */
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  overflow: hidden;
+}
+
+/* Front Karte */
+.auth-card-front {
+  position: relative;
+  z-index: 1;
+}
+
+/* Back Karte */
+.auth-card-back {
+  position: absolute;
+  top: 0;
+  left: 0;
+  transform: rotateY(180deg);
+}
+
+/* Fix für iOS devices */
+@supports (padding: max(0px)) {
+  .auth-modal-overlay {
+    padding-bottom: max(1rem, env(safe-area-inset-bottom));
+  }
+}
