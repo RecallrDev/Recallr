@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { HashLink } from 'react-router-hash-link';
 import { Menu, X, User, LogOut } from 'lucide-react';
 import { useAuth } from './AuthContext';
 
@@ -8,159 +9,253 @@ interface NavbarProps {
   onRegisterClick: () => void;
 }
 
+const scrollWithOffset = (el: HTMLElement) => {
+  const yCoordinate = el.getBoundingClientRect().top + window.pageYOffset;
+  const yOffset = -350;
+  window.scrollTo({ top: yCoordinate + yOffset, behavior: 'smooth'});
+}
+
 const Navbar: React.FC<NavbarProps> = ({ onLoginClick, onRegisterClick }) => {
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  // State to track if we've scrolled past a certain threshold
+  const [scrolled, setScrolled] = useState(false);
+  // State to control mobile menu
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
 
-  const toggleMenu = () => {
-    setIsMenuOpen(!isMenuOpen);
+  // Setup scroll event listener
+  useEffect(() => {
+    const handleScroll = () => {
+      const isScrolled = window.scrollY > 10;
+      if (isScrolled !== scrolled) {
+        setScrolled(isScrolled);
+      }
+    };
+
+    // Add scroll event listener
+    window.addEventListener('scroll', handleScroll);
+    
+    // Clean up event listener
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+    };
+  }, [scrolled]);
+
+  // Toggle mobile menu
+  const toggleMobileMenu = () => {
+    setMobileMenuOpen(!mobileMenuOpen);
+  };
+
+  // Close mobile menu after clicking a link
+  const closeMobileMenu = () => {
+    setMobileMenuOpen(false);
   };
 
   const handleSignOut = async () => {
     await signOut();
     navigate('/');
+    closeMobileMenu();
   };
 
   return (
-    <nav className="bg-white shadow-md">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between h-16">
-          <div className="flex">
-            <div className="flex-shrink-0 flex items-center">
-              <Link to="/" className="text-xl font-bold text-purple-600">YourApp</Link>
-            </div>
-            <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
-              <Link to="/" className="border-transparent text-gray-500 hover:border-purple-500 hover:text-purple-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
-                Home
+    <nav 
+      className={`sticky top-0 z-50 transition-all duration-300 ${
+        scrolled 
+          ? 'bg-white/80 backdrop-blur-md shadow-md' 
+          : 'bg-white shadow-sm'
+      }`}
+    >
+      <div className="container mx-auto px-4 py-3 flex items-center justify-between">
+        
+        {/* Logo/Brand */}
+        <HashLink
+          to="/#"
+          smooth
+          className="flex items-center space-x-2"
+        >
+          <div className="bg-purple-600 text-white rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold">
+            R
+          </div>
+          <span className="text-purple-600 font-semibold text-lg">Recallr</span>
+        </HashLink>
+
+        {/* Desktop Navigation Links */}
+        <div className="hidden md:flex items-center space-x-6 text-sm text-gray-700">
+          <HashLink 
+            to="/#about" 
+            className="hover:text-purple-600 transition"
+            smooth
+          >
+            About
+          </HashLink>
+          <HashLink 
+            to="/#team" 
+            className="hover:text-purple-600 transition"
+            smooth
+          >
+            Team
+          </HashLink>
+          <HashLink 
+            to="/#contact" 
+            className="hover:text-purple-600 transition"
+            smooth
+          >
+            Contact
+          </HashLink>
+        </div>
+
+        {/* Auth Buttons - Desktop */}
+        <div className="hidden md:flex items-center space-x-3">
+          {user ? (
+            <div className="flex items-center space-x-4">
+              <Link 
+                to="/profile" 
+                className="flex items-center px-3 py-2 text-sm font-medium text-purple-700 border border-purple-300 rounded-xl hover:bg-purple-50 transition"
+              >
+                <User className="h-4 w-4 mr-2" />
+                Profil
               </Link>
-              <a href="#features" className="border-transparent text-gray-500 hover:border-purple-500 hover:text-purple-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
-                Features
-              </a>
-              <a href="#about" className="border-transparent text-gray-500 hover:border-purple-500 hover:text-purple-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
-                About
-              </a>
-              <a href="#contact" className="border-transparent text-gray-500 hover:border-purple-500 hover:text-purple-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
-                Contact
-              </a>
+              <button 
+                onClick={handleSignOut} 
+                className="flex items-center px-3 py-2 text-sm font-medium text-gray-700 border border-gray-300 rounded-xl hover:bg-gray-50 transition"
+              >
+                <LogOut className="h-4 w-4 mr-2" />
+                Abmelden
+              </button>
             </div>
+          ) : (
+            <>
+              <button
+                onClick={onLoginClick}
+                className="px-4 py-2 text-sm font-medium text-purple-600 border border-purple-600 rounded-xl hover:bg-purple-50 transition"
+              >
+                Login
+              </button>
+              <button
+                onClick={onRegisterClick}
+                className="px-4 py-2 text-sm font-medium text-white bg-purple-600 rounded-xl hover:bg-purple-700 transition"
+              >
+                Registrieren
+              </button>
+            </>
+          )}
+        </div>
+
+        {/* Mobile Menu Button */}
+        <button 
+          className="md:hidden text-gray-700 focus:outline-none burger-button"
+          onClick={toggleMobileMenu}
+          aria-label="Toggle mobile menu"
+        >
+          <div className="relative w-6 h-6">
+            <span 
+              className={`absolute block w-6 h-0.5 bg-gray-700 transform transition-all duration-300 ease-in-out ${
+                mobileMenuOpen ? 'rotate-45 top-3' : 'top-1.5'
+              }`}
+            ></span>
+            <span 
+              className={`absolute block w-6 h-0.5 bg-gray-700 top-3 transition-all duration-1000 ${
+                mobileMenuOpen ? 'opacity-0' : 'opacity-100'
+              }`}
+            ></span>
+            <span 
+              className={`absolute block w-6 h-0.5 bg-gray-700 transform transition-all duration-300 ease-in-out ${
+                mobileMenuOpen ? '-rotate-45 top-3' : 'top-4.5'
+              }`}
+            ></span>
+          </div>
+        </button>
+      </div>
+
+      {/* Mobile Menu Dropdown */}
+      <div 
+        className={`md:hidden overflow-hidden transition-all duration-500 ease-in-out ${
+          mobileMenuOpen ? 'max-h-[500px] opacity-100' : 'max-h-0 opacity-0'
+        }`}
+        style={{
+          transitionProperty: 'max-height, opacity, padding',
+          boxShadow: mobileMenuOpen ? '0 4px 6px -1px rgba(0, 0, 0, 0.1)' : 'none'
+        }}
+      >
+        <div className={`container mx-auto px-4 py-4 flex flex-col space-y-4 mobile-menu-content ${
+          mobileMenuOpen ? 'translate-y-0 mobile-menu-open' : '-translate-y-4'
+        }`}>
+          {/* Navigation Links */}
+          <div className="flex flex-col space-y-1 border-b border-gray-100 pb-4">
+            <HashLink 
+              to="/#about" 
+              className="px-4 py-3 text-gray-700 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition mobile-nav-item"
+              smooth
+              scroll={el => scrollWithOffset(el)}
+              onClick={closeMobileMenu}
+            >
+              About
+            </HashLink>
+            <HashLink 
+              to="/#team" 
+              className="px-4 py-3 text-gray-700 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition mobile-nav-item"
+              smooth
+              scroll={el => scrollWithOffset(el)}
+              onClick={closeMobileMenu}
+            >
+              Team
+            </HashLink>
+            <HashLink 
+              to="/#contact" 
+              className="px-4 py-3 text-gray-700 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition mobile-nav-item"
+              smooth
+              scroll={el => scrollWithOffset(el)}
+              onClick={closeMobileMenu}
+            >
+              Contact
+            </HashLink>
           </div>
           
-          <div className="hidden sm:ml-6 sm:flex sm:items-center">
+          {/* Auth Buttons */}
+          <div className="flex flex-col space-y-2 pt-2">
             {user ? (
-              <div className="flex items-center space-x-4">
+              <>
                 <Link 
                   to="/profile" 
-                  className="inline-flex items-center px-3 py-2 border border-purple-300 text-sm leading-4 font-medium rounded-md text-purple-700 bg-white hover:bg-purple-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
+                  className="flex items-center justify-center px-4 py-3 text-purple-700 border border-purple-300 rounded-xl hover:bg-purple-50 transition"
+                  onClick={closeMobileMenu}
                 >
                   <User className="h-4 w-4 mr-2" />
                   Profil
                 </Link>
                 <button 
                   onClick={handleSignOut} 
-                  className="inline-flex items-center px-3 py-2 border border-gray-300 text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
+                  className="flex items-center justify-center px-4 py-3 text-gray-700 border border-gray-300 rounded-xl hover:bg-gray-50 transition w-full"
                 >
                   <LogOut className="h-4 w-4 mr-2" />
                   Abmelden
                 </button>
-              </div>
+              </>
             ) : (
-              <div className="flex items-center space-x-4">
-                <button
-                  onClick={onLoginClick}
-                  className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-purple-700 bg-purple-100 hover:bg-purple-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
-                >
-                  Login
-                </button>
-                <button
-                  onClick={onRegisterClick}
-                  className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
-                >
-                  Registrieren
-                </button>
-              </div>
-            )}
-          </div>
-          
-          <div className="-mr-2 flex items-center sm:hidden">
-            <button
-              onClick={toggleMenu}
-              className="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-purple-500"
-            >
-              <span className="sr-only">Menu öffnen</span>
-              {isMenuOpen ? (
-                <X className="block h-6 w-6" />
-              ) : (
-                <Menu className="block h-6 w-6" />
-              )}
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* Mobile menu */}
-      {isMenuOpen && (
-        <div className="sm:hidden">
-          <div className="pt-2 pb-3 space-y-1">
-            <Link to="/" className="block pl-3 pr-4 py-2 border-l-4 border-transparent text-base font-medium text-gray-600 hover:bg-gray-50 hover:border-purple-500 hover:text-purple-700">
-              Home
-            </Link>
-            <a href="#features" className="block pl-3 pr-4 py-2 border-l-4 border-transparent text-base font-medium text-gray-600 hover:bg-gray-50 hover:border-purple-500 hover:text-purple-700">
-              Features
-            </a>
-            <a href="#about" className="block pl-3 pr-4 py-2 border-l-4 border-transparent text-base font-medium text-gray-600 hover:bg-gray-50 hover:border-purple-500 hover:text-purple-700">
-              About
-            </a>
-            <a href="#contact" className="block pl-3 pr-4 py-2 border-l-4 border-transparent text-base font-medium text-gray-600 hover:bg-gray-50 hover:border-purple-500 hover:text-purple-700">
-              Contact
-            </a>
-          </div>
-          
-          <div className="pt-4 pb-3 border-t border-gray-200">
-            {user ? (
-              <div className="space-y-1">
-                <Link 
-                  to="/profile" 
-                  className="block pl-3 pr-4 py-2 border-l-4 border-transparent text-base font-medium text-gray-600 hover:bg-gray-50 hover:border-purple-500 hover:text-purple-700"
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  Profil
-                </Link>
-                <button 
-                  onClick={() => {
-                    handleSignOut();
-                    setIsMenuOpen(false);
-                  }} 
-                  className="block w-full text-left pl-3 pr-4 py-2 border-l-4 border-transparent text-base font-medium text-gray-600 hover:bg-gray-50 hover:border-purple-500 hover:text-purple-700"
-                >
-                  Abmelden
-                </button>
-              </div>
-            ) : (
-              <div className="space-y-1">
+              <>
                 <button
                   onClick={() => {
                     onLoginClick();
-                    setIsMenuOpen(false);
+                    closeMobileMenu();
                   }}
-                  className="block w-full text-left pl-3 pr-4 py-2 border-l-4 border-transparent text-base font-medium text-gray-600 hover:bg-gray-50 hover:border-purple-500 hover:text-purple-700"
+                  className="px-4 py-3 text-center text-purple-600 border border-purple-600 rounded-xl hover:bg-purple-50 transition"
                 >
                   Login
                 </button>
                 <button
                   onClick={() => {
                     onRegisterClick();
-                    setIsMenuOpen(false);
+                    closeMobileMenu();
                   }}
-                  className="block w-full text-left pl-3 pr-4 py-2 border-l-4 border-transparent text-base font-medium text-gray-600 hover:bg-gray-50 hover:border-purple-500 hover:text-purple-700"
+                  className="px-4 py-3 text-center text-white bg-purple-600 rounded-xl hover:bg-purple-700 transition"
                 >
                   Registrieren
                 </button>
-              </div>
+              </>
             )}
           </div>
         </div>
-      )}
+      </div>
     </nav>
   );
 };
