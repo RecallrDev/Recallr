@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, Mail, Lock, UserPlus, LogIn, User } from 'lucide-react';
+import { supabase } from '../supabase/client';
+import { useNavigate } from 'react-router-dom';
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -13,38 +15,127 @@ const AuthModal: React.FC<AuthModalProps> = ({
   onClose 
 }) => {
   const [isFlipped, setIsFlipped] = useState(initialView === 'register');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [name, setName] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
+  const navigate = useNavigate();
   
   // Reset state when modal is closed or initialView changes
   useEffect(() => {
     if (isOpen) {
       setIsFlipped(initialView === 'register');
+      setEmail('');
+      setPassword('');
+      setName('');
+      setErrorMessage('');
+      setSuccessMessage('');
     }
   }, [isOpen, initialView]);
 
   // Toggle flip state
   const toggleView = () => {
     setIsFlipped(!isFlipped);
+    setErrorMessage('');
+    setSuccessMessage('');
   };
+
+  // Handle sign in with Supabase
+  const handleSignIn = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!email || !password) {
+      setErrorMessage('Bitte gib deine E-Mail und dein Passwort ein');
+      return;
+    }
+    
+    try {
+      setLoading(true);
+      setErrorMessage('');
+      
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      if (data?.user) {
+        // Erfolgreich eingeloggt
+        setSuccessMessage('Erfolgreich eingeloggt!');
+        // Weiterleitung zur Profilseite nach kurzer Verzögerung
+        setTimeout(() => {
+          onClose();
+          navigate('/profile');
+        }, 1000);
+      }
+    } catch (error: any) {
+      console.error('Fehler beim Einloggen:', error.message);
+      setErrorMessage(error.message || 'Fehler beim Einloggen');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+// Minimale Version zum Testen
+const handleSignUp = async (e: React.FormEvent) => {
+  e.preventDefault();
+  
+  if (!email || !password) {
+    setErrorMessage('Bitte gib deine E-Mail und dein Passwort ein');
+    return;
+  }
+  
+  try {
+    setLoading(true);
+    setErrorMessage('');
+    
+    // Einfachste Form der Registrierung ohne zusätzliche Optionen
+    console.log("Beginne einfache Registrierung mit:", email);
+    
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password
+      // Keine zusätzlichen Optionen, um Komplexität zu reduzieren
+    });
+    
+    console.log("Registrierungsergebnis:", { data, error });
+
+    if (error) {
+      throw error;
+    }
+
+    if (data?.user) {
+      setSuccessMessage(`Registrierung erfolgreich! Eine Bestätigungs-E-Mail wurde an ${email} gesendet.`);
+    }
+  } catch (error: any) {
+    console.error('Fehler bei der Registrierung:', error);
+    setErrorMessage(error.message || 'Fehler bei der Registrierung');
+  } finally {
+    setLoading(false);
+  }
+};
 
   // If modal is not open, don't render anything
   if (!isOpen) return null;
 
   return (
-    // Overlay mit auth-modal-overlay Klasse aus CSS
     <div 
       className="auth-modal-overlay"
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
     >
-      {/* Flip container mit auth-flip-container Klasse aus CSS */}
       <div 
         className="auth-flip-container"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Flipper mit auth-flipper Klasse + is-flipped wenn aktiviert */}
         <div className={`auth-flipper ${isFlipped ? 'is-flipped' : ''}`}>
-          {/* Front side - Login mit auth-card-face und auth-card-front Klassen */}
+          {/* Login */}
           <div className="auth-card-face auth-card-front">
             <div className="p-8">
               <div className="flex justify-between items-center mb-6">
@@ -61,7 +152,19 @@ const AuthModal: React.FC<AuthModalProps> = ({
                 </button>
               </div>
               
-              <form className="space-y-4">
+              {errorMessage && (
+                <div className="mb-4 p-3 bg-red-100 text-red-700 rounded-lg text-sm">
+                  {errorMessage}
+                </div>
+              )}
+
+              {successMessage && (
+                <div className="mb-4 p-3 bg-green-100 text-green-700 rounded-lg text-sm">
+                  {successMessage}
+                </div>
+              )}
+              
+              <form className="space-y-4" onSubmit={handleSignIn}>
                 <div>
                   <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">Email</label>
                   <div className="relative">
@@ -73,6 +176,9 @@ const AuthModal: React.FC<AuthModalProps> = ({
                       id="email"
                       className="pl-10 w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-transparent transition"
                       placeholder="your.email@example.com"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      required
                     />
                   </div>
                 </div>
@@ -88,6 +194,9 @@ const AuthModal: React.FC<AuthModalProps> = ({
                       id="password"
                       className="pl-10 w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-transparent transition"
                       placeholder="••••••••"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      required
                     />
                   </div>
                 </div>
@@ -115,8 +224,9 @@ const AuthModal: React.FC<AuthModalProps> = ({
                 <button
                   type="submit"
                   className="w-full py-3 px-4 border border-transparent rounded-xl shadow-sm text-sm font-medium text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 transition"
+                  disabled={loading}
                 >
-                  Sign in
+                  {loading ? 'Wird eingeloggt...' : 'Sign in'}
                 </button>
               </form>
               
@@ -135,7 +245,7 @@ const AuthModal: React.FC<AuthModalProps> = ({
             </div>
           </div>
 
-          {/* Back side - Register mit auth-card-face und auth-card-back */}
+          {/* Register */}
           <div className="auth-card-face auth-card-back">
             <div className="p-8">
               <div className="flex justify-between items-center mb-6">
@@ -152,7 +262,19 @@ const AuthModal: React.FC<AuthModalProps> = ({
                 </button>
               </div>
               
-              <form className="space-y-4">
+              {errorMessage && (
+                <div className="mb-4 p-3 bg-red-100 text-red-700 rounded-lg text-sm">
+                  {errorMessage}
+                </div>
+              )}
+
+              {successMessage && (
+                <div className="mb-4 p-3 bg-green-100 text-green-700 rounded-lg text-sm">
+                  {successMessage}
+                </div>
+              )}
+              
+              <form className="space-y-4" onSubmit={handleSignUp}>
                 <div>
                   <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
                   <div className="relative">
@@ -164,6 +286,9 @@ const AuthModal: React.FC<AuthModalProps> = ({
                       id="name"
                       className="pl-10 w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-transparent transition"
                       placeholder="John Doe"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      required
                     />
                   </div>
                 </div>
@@ -179,6 +304,9 @@ const AuthModal: React.FC<AuthModalProps> = ({
                       id="register-email"
                       className="pl-10 w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-transparent transition"
                       placeholder="your.email@example.com"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      required
                     />
                   </div>
                 </div>
@@ -194,6 +322,9 @@ const AuthModal: React.FC<AuthModalProps> = ({
                       id="register-password"
                       className="pl-10 w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-transparent transition"
                       placeholder="••••••••"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      required
                     />
                   </div>
                 </div>
@@ -204,6 +335,7 @@ const AuthModal: React.FC<AuthModalProps> = ({
                     name="terms"
                     type="checkbox"
                     className="h-4 w-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
+                    required
                   />
                   <label htmlFor="terms" className="ml-2 block text-sm text-gray-700">
                     I agree to the{' '}
@@ -220,8 +352,9 @@ const AuthModal: React.FC<AuthModalProps> = ({
                 <button
                   type="submit"
                   className="w-full py-3 px-4 border border-transparent rounded-xl shadow-sm text-sm font-medium text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 transition"
+                  disabled={loading}
                 >
-                  Create account
+                  {loading ? 'Erstelle Konto...' : 'Create account'}
                 </button>
               </form>
               
