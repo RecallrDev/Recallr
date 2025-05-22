@@ -1,11 +1,7 @@
 import React from 'react';
 import { Plus } from 'lucide-react';
 import DeckCard from './DeckCard';
-
-interface Deck {
-  id: string;
-  [key: string]: any;
-}
+import type { Deck } from '../types/Deck';
 
 interface DeckListProps {
   decks: Deck[];
@@ -14,9 +10,15 @@ interface DeckListProps {
   onEditDeck: (deck: Deck) => void;
 }
 
-const DeckList = ({ decks, onCreateDeck, onStudyDeck, onEditDeck }: DeckListProps) => {
+const DeckList: React.FC<DeckListProps> = ({
+  decks,
+  onCreateDeck,
+  onStudyDeck,
+  onEditDeck,
+}) => {
   return (
     <div className="max-w-4xl mx-auto p-6">
+      {/* Header */}
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-3xl font-bold text-gray-900">Your Decks</h1>
         <button
@@ -28,8 +30,9 @@ const DeckList = ({ decks, onCreateDeck, onStudyDeck, onEditDeck }: DeckListProp
         </button>
       </div>
 
+      {/* Deck Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {decks.map(deck => (
+        {decks.map((deck) => (
           <DeckCard
             key={deck.id}
             deck={deck}
