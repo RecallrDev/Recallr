@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import IntroSection from './components/IntroSection';
-import FeaturesSection from './components/FeaturesSection';
+// import FeaturesSection from './components/FeaturesSection';
 import HowItWorksSection from './components/HowItWorksSection';
 import Footer from './components/Footer';
 import CallToActionSection from './components/CallToActionSection';
@@ -13,6 +13,7 @@ import BattleSection from './components/BattleSection';
 import ProfilePage from './components/ProfilePage';
 import AuthCallback from './components/AuthCallback';
 import ResetPasswordPage from './components/ResetPasswordPage';
+import StudyPage from './components/StudyPage';
 import AuthModal from './components/AuthModal';
 import { AuthProvider } from './components/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -69,6 +70,11 @@ const App: React.FC = () => {
                 </ProtectedRoute>
               }
             />
+            <Route path="/study" element={
+              <ProtectedRoute>
+                <StudyPage />
+              </ProtectedRoute>
+            } />
           </Routes>
 
           <AuthModal
