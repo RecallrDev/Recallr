@@ -29,14 +29,22 @@ const DeckCard: React.FC<DeckCardProps> = ({ deck, onStudy, onEdit }) => {
         <div className="space-y-2 mb-6">
           <p className="text-gray-600">{deck.cardCount} cards</p>
           <p className="text-sm text-gray-500">
-            {deck.lastStudied ? `Last studied: ${deck.lastStudied}` : 'Never studied'}
+            {deck.lastStudied
+              ? `Last studied: ${new Date(deck.lastStudied).toLocaleString('de-DE', {
+                  day:   '2-digit',
+                  month: '2-digit',
+                  year:  'numeric',
+                  hour:  '2-digit',
+                  minute:'2-digit',
+                })}`
+              : 'Never studied'}
           </p>
         </div>
 
         <div className="flex gap-2">
           <button
             onClick={() => onStudy(deck)}
-            className="flex-1 text-white px-3 py-2 rounded flex items-center justify-center gap-2 hover:opacity-90 transition-all font-medium disabled:opacity-50 disabled:cursor-not-allowed group"
+            className="flex-1 text-white px-3 py-2 rounded flex items-center justify-center gap-2 hover:scale-105 transition-all font-medium disabled:opacity-50 disabled:cursor-not-allowed group"
             style={{ backgroundColor: deck.color }}
             disabled={deck.cardCount === 0}
           >
@@ -45,7 +53,7 @@ const DeckCard: React.FC<DeckCardProps> = ({ deck, onStudy, onEdit }) => {
           </button>
           <button
             onClick={() => onEdit(deck)}
-            className="bg-gray-100 text-gray-700 px-3 py-2 rounded hover:bg-gray-200 transition-colors"
+            className="bg-gray-100 text-gray-700 px-3 py-2 rounded hover:bg-gray-200 hover:scale-105 transition-colors"
           >
             <Edit size={16} style={{ color: deck.color }} />
           </button>

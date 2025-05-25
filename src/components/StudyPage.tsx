@@ -4,11 +4,12 @@ import { supabase } from '../supabase/client';
 import DeckList from './DeckList';
 import CreateDeck from './CreateDeck';
 import StudySession from './StudySession';
+import CreateCard from './CreateCard';
 
 import type { Card } from '../types/Card';
 import type { Deck } from '../types/Deck';
 
-type View = 'decks' | 'create-deck' | 'study' | 'deck-detail';
+type View = 'decks' | 'create-deck' | 'create-card' | 'study' | 'deck-detail';
 
 const StudyPage: React.FC = () => {
   const [currentView, setCurrentView] = useState<View>('decks');
@@ -26,15 +27,15 @@ const StudyPage: React.FC = () => {
   const [currentCardIndex, setCurrentCardIndex] = useState(0);
   const [showAnswer, setShowAnswer] = useState(false);
 
-  // 1) Fetch all decks for this user, then augment each with a cardCount
+  // 1) Fetch all decks for this user, augment each with cardCount
   const fetchDecks = async () => {
     setIsLoading(true);
 
-    // 1a) Get the current user
     const {
       data: { user },
       error: userError,
     } = await supabase.auth.getUser();
+
     if (userError || !user) {
       console.error('No authenticated user', userError);
       setDecks([]);
@@ -42,7 +43,6 @@ const StudyPage: React.FC = () => {
       return;
     }
 
-    // 1b) Select all decks for that user
     const { data: rawDecks, error: fetchError } = await supabase
       .from('decks')
       .select('*')
@@ -56,22 +56,20 @@ const StudyPage: React.FC = () => {
       return;
     }
 
-    // 1c) For each deck, run a head‐only count on cards
     const withCounts: Deck[] = await Promise.all(
       rawDecks.map(async (deck) => {
         const { count, error: countError } = await supabase
-          .from('cards')
-          // head: true means “don’t return rows—just give me the count”
+          .from('basic_cards')
           .select('id', { head: true, count: 'exact' })
           .eq('deck_id', deck.id);
 
         if (countError) {
-          console.error(`Error counting cards for deck ${deck.id}`, countError);
+          console.error(`Error counting basic_cards for deck ${deck.id}`, countError);
         }
         return {
           ...deck,
           cardCount: count ?? 0,
-          lastStudied: deck.lastStudied ?? undefined,
+          lastStudied: deck.last_studied ?? undefined,
         };
       })
     );
@@ -80,7 +78,7 @@ const StudyPage: React.FC = () => {
     setIsLoading(false);
   };
 
-  // 2) On mount, and on auth changes, fetch decks
+  // 2) On mount, fetch decks and listen for auth changes
   useEffect(() => {
     fetchDecks();
 
@@ -101,21 +99,17 @@ const StudyPage: React.FC = () => {
   const handleShowCreateDeck = () => {
     setCurrentView('create-deck');
   };
-
   const handleCancelCreateDeck = () => {
     setNewDeckName('');
     setNewDeckCategory('Other');
     setNewDeckColor('#3B82F6');
     setCurrentView('decks');
   };
-
-  // Called by CreateDeck on successful insert
   const handleCreateDeckSuccess = async () => {
     setNewDeckName('');
     setNewDeckCategory('Other');
     setNewDeckColor('#3B82F6');
     setCurrentView('decks');
-
     await fetchDecks();
   };
 
@@ -128,34 +122,71 @@ const StudyPage: React.FC = () => {
     setSelectedDeck(deck);
     setCurrentView('study');
 
-    const { data: cards, error: cardError } = await supabase
-      .from('cards')
+    const { data: basic_cards, error: cardError } = await supabase
+      .from('basic_cards')
       .select('*')
-      .eq('deck_id', deck.id) as { data: Card[] | null, error: any };
+      .eq('deck_id', deck.id);
 
     if (cardError) {
-      console.error('Error fetching cards for deck:', cardError);
+      console.error('Error fetching basic_cards for deck:', cardError);
       setStudyCards([]);
     } else {
-      setStudyCards(cards || []);
+      setStudyCards(basic_cards || []);
     }
 
     setCurrentCardIndex(0);
     setShowAnswer(false);
   };
 
-  // Study session controls
+  // 4) Study session controls
   const handleFlipCard = () => {
     setShowAnswer((prev) => !prev);
   };
-  const handleNextCard = () => {
-    if (currentCardIndex < studyCards.length - 1) {
-      setCurrentCardIndex((prev) => prev + 1);
-      setShowAnswer(false);
+  const handleNextCard = async () => {
+  // If there are more cards, just move to the next one
+  if (currentCardIndex < studyCards.length - 1) {
+    setCurrentCardIndex((prev) => prev + 1);
+    setShowAnswer(false);
+    return;
+  }
+
+  // OTHERWISE, we're at the last card → end of session:
+  // 1) Update lastStudied for this deck in Supabase
+  if (selectedDeck) {
+    console.log('Updating last studied timestamp for deck:', selectedDeck.id);
+    const nowIso = new Date().toISOString();
+    console.log('New timestamp:', nowIso);
+
+    const { data, error: updateError } = await supabase
+      .from('decks')
+      .update({ last_studied: nowIso })
+      .eq('id', selectedDeck.id)
+      .select(); // Add .select() to return the updated row
+
+    console.log('Supabase update result:', { data, error: updateError });
+
+    if (updateError) {
+      console.error('Failed to update last_studied:', updateError);
     } else {
-      setCurrentView('decks');
+      console.log('Successfully updated database');
+      // 2) Update selectedDeck immediately with the new timestamp
+      setSelectedDeck({
+        ...selectedDeck,
+        lastStudied: nowIso
+      });
+
+      // 3) Re-fetch decks so that the deck list shows updated info
+      await fetchDecks();
     }
-  };
+  }
+
+  // 4) Finally, return to the deck list
+  setCurrentView('decks');
+  console.log('Study session completed, returning to deck list');
+};
+
+
+
   const handleResetStudySession = () => {
     setCurrentCardIndex(0);
     setShowAnswer(false);
@@ -164,10 +195,25 @@ const StudyPage: React.FC = () => {
     setCurrentView('decks');
   };
 
+  // 5) When a card is created successfully, re-fetch deck counts but stay on CreateCard
+  const handleCreateCardSuccess = async () => {
+    // Re-fetch all decks so that cardCount is up-to-date
+    await fetchDecks();
+
+    // Update `selectedDeck` so that its cardCount reflects the new value
+    if (selectedDeck) {
+      const updated = decks.find((d) => d.id === selectedDeck.id) ?? selectedDeck;
+      setSelectedDeck(updated);
+    }
+
+    // IMPORTANT: Do NOT change `currentView`.  
+    // We stay on 'create-card' so the user can make another card.
+  };
+
   // Render different views
   switch (currentView) {
     case 'decks':
-      // 1) Show a loading state while fetching
+      // 1) Loading state
       if (isLoading) {
         return (
           <div className="flex items-center justify-center h-full p-6">
@@ -176,7 +222,7 @@ const StudyPage: React.FC = () => {
         );
       }
 
-      // 2) If not loading and no decks exist, show “No Decks Found”
+      // 2) No decks found
       if (decks.length === 0) {
         return (
           <div className="max-w-2xl mx-auto p-6 text-center">
@@ -194,7 +240,7 @@ const StudyPage: React.FC = () => {
         );
       }
 
-      // 3) Otherwise, render the normal DeckList (each deck now has a cardCount)
+      // 3) Show the deck list
       return (
         <DeckList
           decks={decks}
@@ -218,6 +264,64 @@ const StudyPage: React.FC = () => {
         />
       );
 
+    case 'deck-detail':
+      if (!selectedDeck) return null;
+      return (
+        <div className="max-w-2xl mx-auto p-6">
+          <h1 className="text-2xl font-bold mb-4">{selectedDeck.name}</h1>
+          <p className="mb-2">
+            <strong>Category:</strong> {selectedDeck.category}
+          </p>
+          <p className="mb-2">
+            <strong>Color:</strong>{' '}
+            <span
+              className="inline-block w-4 h-4 rounded-full border border-gray-300"
+              style={{ backgroundColor: selectedDeck.color }}
+            />
+          </p>
+          <p className="mb-6 text-gray-600">
+            {selectedDeck.cardCount} cards&nbsp;|&nbsp;
+            {selectedDeck.lastStudied
+              ? `Last studied: ${new Date(selectedDeck.lastStudied).toLocaleString('de-DE', {
+                  day:   '2-digit',
+                  month: '2-digit',
+                  year:  'numeric',
+                  hour:  '2-digit',
+                  minute:'2-digit',
+                })}`
+              : 'Never studied'}
+          </p>
+
+          <div className="flex gap-3 mb-6">
+            <button
+              onClick={() => setCurrentView('decks')}
+              className="bg-gray-200 text-gray-700 px-4 py-2 rounded hover:bg-gray-300 transition-colors hover:scale-105 font-medium"
+            >
+              Back to Decks
+            </button>
+            <button
+              onClick={() => setCurrentView('create-card')}
+              className=" text-white px-4 py-2 rounded hover:scale-105 transition-colors font-medium"
+              style={{ backgroundColor: selectedDeck.color }}
+            >
+              + Add Card
+            </button>
+          </div>
+        </div>
+      );
+
+    case 'create-card':
+      if (!selectedDeck) return null;
+      return (
+        <CreateCard
+          deckId={selectedDeck.id}
+          deckColor={selectedDeck.color}
+          onCreateSuccess={handleCreateCardSuccess}
+          onCancel={() => setCurrentView('deck-detail')
+          }
+        />
+      );
+
     case 'study':
       if (!selectedDeck) return null;
       return (
@@ -231,32 +335,6 @@ const StudyPage: React.FC = () => {
           onReset={handleResetStudySession}
           onExit={handleExitStudySession}
         />
-      );
-
-    case 'deck-detail':
-      if (!selectedDeck) return null;
-      return (
-        <div className="max-w-2xl mx-auto p-6">
-          <h1 className="text-2xl font-bold mb-4">
-            Deck Detail: {selectedDeck.name}
-          </h1>
-          <p>
-            <strong>Category:</strong> {selectedDeck.category}
-          </p>
-          <p>
-            <strong>Color:</strong>{' '}
-            <span
-              className="inline-block w-4 h-4 rounded-full border border-gray-300"
-              style={{ backgroundColor: selectedDeck.color }}
-            />
-          </p>
-          <button
-            onClick={() => setCurrentView('decks')}
-            className="mt-4 bg-purple-600 text-white px-4 py-2 rounded-lg"
-          >
-            Back to Decks
-          </button>
-        </div>
       );
 
     default:
