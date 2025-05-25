@@ -19,6 +19,7 @@ const AuthModal: React.FC<AuthModalProps> = ({
   const [isFlipped, setIsFlipped] = useState(initialView === 'register');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [name, setName] = useState('');
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
@@ -32,6 +33,7 @@ const AuthModal: React.FC<AuthModalProps> = ({
       setIsFlipped(initialView === 'register');
       setEmail('');
       setPassword('');
+      setConfirmPassword('');
       setName('');
       setErrorMessage('');
       setSuccessMessage('');
@@ -43,6 +45,9 @@ const AuthModal: React.FC<AuthModalProps> = ({
     setIsFlipped(!isFlipped);
     setErrorMessage('');
     setSuccessMessage('');
+    // Reset password fields when switching views
+    setPassword('');
+    setConfirmPassword('');
   };
 
   // Handle sign in with Supabase
@@ -50,7 +55,7 @@ const AuthModal: React.FC<AuthModalProps> = ({
     e.preventDefault();
     
     if (!email || !password) {
-      setErrorMessage('Bitte gib deine E-Mail und dein Passwort ein');
+      setErrorMessage('Please enter your e-mail and password');
       return;
     }
     
@@ -69,7 +74,7 @@ const AuthModal: React.FC<AuthModalProps> = ({
 
       if (data?.user) {
         // Erfolgreich eingeloggt
-        setSuccessMessage('Erfolgreich eingeloggt!');
+        setSuccessMessage('Successfully logged in!');
         // Weiterleitung zur Profilseite nach kurzer Verzögerung
         setTimeout(() => {
           onClose();
@@ -77,8 +82,8 @@ const AuthModal: React.FC<AuthModalProps> = ({
         }, 1000);
       }
     } catch (error: any) {
-      console.error('Fehler beim Einloggen:', error);
-      setErrorMessage(error.message || 'Fehler beim Einloggen');
+      console.error('Error when logging in:', error);
+      setErrorMessage(error.message || 'Error when logging in');
     } finally {
       setLoading(false);
     }
@@ -88,8 +93,18 @@ const AuthModal: React.FC<AuthModalProps> = ({
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!email || !password || !name) {
-      setErrorMessage('Bitte fülle alle Felder aus');
+    if (!email || !password || !confirmPassword || !name) {
+      setErrorMessage('Please fill in all fields');
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      setErrorMessage('The passwords do not match');
+      return;
+    }
+
+    if (password.length < 6) {
+      setErrorMessage('The password must be at least 6 characters long');
       return;
     }
     
@@ -114,7 +129,14 @@ const AuthModal: React.FC<AuthModalProps> = ({
       }
 
       if (authData?.user) {
-        // 2. Manuell ein Profil erstellen
+        // Prüfen ob der Benutzer wirklich neu ist (nicht nur eine Bestätigungs-E-Mail)
+        if (authData.user.email_confirmed_at || authData.user.confirmed_at) {
+          // Benutzer existiert bereits und ist bestätigt
+          setErrorMessage('An account with this e-mail address already exists. Please log in.');
+          return;
+        }
+
+        // 2. Manuell ein Profil erstellen für neue Benutzer
         try {
           const { error: profileError } = await supabase
             .from('profiles')
@@ -127,19 +149,27 @@ const AuthModal: React.FC<AuthModalProps> = ({
             });
             
           if (profileError) {
-            console.error('Fehler beim Erstellen des Profils:', profileError.message);
-            // Wir werfen hier keinen Fehler, da der Benutzer bereits erstellt wurde
+            console.error('Error when creating the profile:', profileError.message);
+            // Wenn das Profil nicht erstellt werden kann, ist wahrscheinlich der Benutzer bereits vorhanden
+            if (profileError.message.includes('row-level security') || profileError.message.includes('duplicate')) {
+              setErrorMessage('An account with this e-mail address already exists. Please log in.');
+              return;
+            }
+            // Für andere Profil-Fehler werfen wir einen allgemeinen Fehler
+            throw new Error('Error when creating the user profile');
           }
-        } catch (profileCreateError) {
-          console.error('Unerwarteter Fehler beim Profil erstellen:', profileCreateError);
+        } catch (profileCreateError: any) {
+          console.error('Unexpected error when creating a profile:', profileCreateError);
+          setErrorMessage('Error creating the user profile. Please try again.');
+          return;
         }
         
-        // Erfolgreich registriert
-        setSuccessMessage('Registrierung erfolgreich! Bitte bestätige deine E-Mail-Adresse.');
+        // Erfolgreich registriert - nur anzeigen wenn wirklich ein neuer Benutzer erstellt wurde
+        setSuccessMessage('Registration successful! Please confirm your e-mail address.');
       }
     } catch (error: any) {
-      console.error('Fehler bei der Registrierung:', error.message);
-      setErrorMessage(error.message || 'Fehler bei der Registrierung');
+      console.error('Error during registration:', error.message);
+      setErrorMessage(error.message || 'Error during registration');
     } finally {
       setLoading(false);
     }
@@ -172,6 +202,19 @@ const AuthModal: React.FC<AuthModalProps> = ({
   return (
     <div 
       className="auth-modal-overlay"
+      style={{ 
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        display: 'flex',
+        alignItems: 'flex-start',
+        justifyContent: 'center',
+        paddingTop: '10vh',
+        zIndex: 50
+      }}
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
@@ -266,7 +309,7 @@ const AuthModal: React.FC<AuthModalProps> = ({
                       onClick={openForgotPassword}
                       className="font-medium text-purple-600 hover:text-purple-500"
                     >
-                      Passwort vergessen?
+                      Forgot your password?
                     </button>
                   </div>
                 </div>
@@ -382,6 +425,32 @@ const AuthModal: React.FC<AuthModalProps> = ({
                     />
                   </div>
                 </div>
+
+                <div>
+                  <label htmlFor="confirm-password" className="block text-sm font-medium text-gray-700 mb-1">Confirm Password</label>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <Lock className="h-5 w-5 text-gray-400" />
+                    </div>
+                    <input
+                      type="password"
+                      id="confirm-password"
+                      className={`pl-10 w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-transparent transition ${
+                        confirmPassword && password !== confirmPassword 
+                          ? 'border-red-300 focus:ring-red-500' 
+                          : 'border-gray-300'
+                      }`}
+                      placeholder="••••••••"
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      required
+                      minLength={6}
+                    />
+                  </div>
+                  {confirmPassword && password !== confirmPassword && (
+                    <p className="mt-1 text-sm text-red-600">The passwords do not match</p>
+                  )}
+                </div>
                 
                 <div className="flex items-center">
                   <input
@@ -405,8 +474,8 @@ const AuthModal: React.FC<AuthModalProps> = ({
                 
                 <button
                   type="submit"
-                  className="w-full py-3 px-4 border border-transparent rounded-xl shadow-sm text-sm font-medium text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 transition"
-                  disabled={loading}
+                  className="w-full py-3 px-4 border border-transparent rounded-xl shadow-sm text-sm font-medium text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 transition disabled:bg-gray-400 disabled:cursor-not-allowed"
+                  disabled={loading || (confirmPassword.length > 0 && password !== confirmPassword)}
                 >
                   {loading ? 'Erstelle Konto...' : 'Create account'}
                 </button>
