@@ -8,4 +8,6 @@ export interface Card {
   front: string;
   /** Back side content (answer) */
   back: string;
+  /** ID of the deck this card belongs to */
+  deck_id: string; 
 }

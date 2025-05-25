@@ -12,6 +12,8 @@ export interface Deck {
   category: string;
   /** Number of cards in the deck */
   cardCount: number;
+  // ISO date string of when the deck was created
+  createdAt?: string;
   /** ISO date or human-friendly string of last study session */
   lastStudied?: string;
 }

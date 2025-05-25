@@ -3,7 +3,7 @@ import { Plus } from 'lucide-react';
 import DeckCard from './DeckCard';
 import type { Deck } from '../types/Deck';
 
-interface DeckListProps {
+export type DeckListProps = {
   decks: Deck[];
   onCreateDeck: () => void;
   onStudyDeck: (deck: Deck) => void;

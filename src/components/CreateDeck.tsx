@@ -1,5 +1,6 @@
 import React from 'react';
 import { ArrowLeft } from 'lucide-react';
+import { supabase } from '../supabase/client';
 
 const categories = [
   'Languages', 'Science', 'History', 'Mathematics', 'Literature',
@@ -19,14 +20,14 @@ const colorOptions = [
   { name: 'Black', value: '#000000' },
 ];
 
-interface CreateDeckProps {
+export type CreateDeckProps = {
   deckName: string;
   setDeckName: (name: string) => void;
   category: string;
   setCategory: (category: string) => void;
   color: string;
   setColor: (color: string) => void;
-  onCreateDeck: () => void;
+  onCreateSuccess: () => void;
   onCancel: () => void;
 }
 
@@ -37,9 +38,40 @@ const CreateDeck: React.FC<CreateDeckProps> = ({
   setCategory,
   color,
   setColor,
-  onCreateDeck,
+  onCreateSuccess,
   onCancel,
 }) => {
+
+  const handleCreateDeck = async () => {
+    const {
+      data: { user },
+      error,
+    } = await supabase.auth.getUser();
+
+    if (error || !user) {
+      console.error('You must be logged in to create a deck!', error);
+      return;
+    }
+
+    const { error: insertError } = await supabase
+      .from('decks')
+      .insert({
+        user_id: user.id,
+        name: deckName.trim(),
+        category,
+        color,
+      });
+
+      if (insertError) {
+        console.error('Error creating deck:', insertError);
+        return;
+      } else {
+        setDeckName('');
+        setCategory('Other');
+        setColor(colorOptions[0].value);
+        onCreateSuccess();
+      }
+  }
   return (
     <div className="max-w-2xl mx-auto p-6">
       {/* Header */}
@@ -123,7 +155,7 @@ const CreateDeck: React.FC<CreateDeckProps> = ({
         {/* Actions */}
         <div className="flex gap-3 pt-2">
           <button
-            onClick={onCreateDeck}
+            onClick={handleCreateDeck}
             disabled={!deckName.trim()}
             className="bg-purple-600 text-white px-6 py-2 rounded-lg hover:bg-purple-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
           >

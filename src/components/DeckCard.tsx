@@ -2,7 +2,7 @@ import React from 'react';
 import { Play, Edit } from 'lucide-react';
 import type { Deck } from '../types/Deck';
 
-export interface DeckCardProps {
+export type DeckCardProps = {
   deck: Deck;
   onStudy: (deck: Deck) => void;
   onEdit: (deck: Deck) => void;
