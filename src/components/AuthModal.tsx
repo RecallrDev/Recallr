@@ -25,13 +25,22 @@ const AuthModal: React.FC<AuthModalProps> = ({
   const [errorMessage, setErrorMessage] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
   const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
   const navigate = useNavigate();
   
   // Reset state when modal is closed or initialView changes
   useEffect(() => {
     if (isOpen) {
       setIsFlipped(initialView === 'register');
-      setEmail('');
+      // Lade gespeicherte E-Mail wenn vorhanden
+      const savedEmail = localStorage.getItem('rememberedEmail');
+      if (savedEmail) {
+        setEmail(savedEmail);
+        setRememberMe(true);
+      } else {
+        setEmail('');
+        setRememberMe(false);
+      }
       setPassword('');
       setConfirmPassword('');
       setName('');
@@ -73,8 +82,15 @@ const AuthModal: React.FC<AuthModalProps> = ({
       }
 
       if (data?.user) {
+        // E-Mail speichern oder entfernen basierend auf "Remember me"
+        if (rememberMe) {
+          localStorage.setItem('rememberedEmail', email);
+        } else {
+          localStorage.removeItem('rememberedEmail');
+        }
+        
         // Erfolgreich eingeloggt
-        setSuccessMessage('Successfully logged in!');
+        setSuccessMessage('Erfolgreich eingeloggt!');
         // Weiterleitung zur Profilseite nach kurzer Verzögerung
         setTimeout(() => {
           onClose();
@@ -82,8 +98,8 @@ const AuthModal: React.FC<AuthModalProps> = ({
         }, 1000);
       }
     } catch (error: any) {
-      console.error('Error when logging in:', error);
-      setErrorMessage(error.message || 'Error when logging in');
+      console.error('Fehler beim Einloggen:', error);
+      setErrorMessage(error.message || 'Fehler beim Einloggen');
     } finally {
       setLoading(false);
     }
@@ -94,17 +110,17 @@ const AuthModal: React.FC<AuthModalProps> = ({
     e.preventDefault();
     
     if (!email || !password || !confirmPassword || !name) {
-      setErrorMessage('Please fill in all fields');
+      setErrorMessage('Bitte fülle alle Felder aus');
       return;
     }
 
     if (password !== confirmPassword) {
-      setErrorMessage('The passwords do not match');
+      setErrorMessage('Die Passwörter stimmen nicht überein');
       return;
     }
 
     if (password.length < 6) {
-      setErrorMessage('The password must be at least 6 characters long');
+      setErrorMessage('Das Passwort muss mindestens 6 Zeichen lang sein');
       return;
     }
     
@@ -129,47 +145,26 @@ const AuthModal: React.FC<AuthModalProps> = ({
       }
 
       if (authData?.user) {
-        // Prüfen ob der Benutzer wirklich neu ist (nicht nur eine Bestätigungs-E-Mail)
-        if (authData.user.email_confirmed_at || authData.user.confirmed_at) {
-          // Benutzer existiert bereits und ist bestätigt
-          setErrorMessage('An account with this e-mail address already exists. Please log in.');
+        // Prüfen ob der Benutzer bereits existiert
+        // Wenn identities vorhanden sind, bedeutet das der Benutzer existiert bereits
+        if (authData.user.identities && authData.user.identities.length === 0) {
+          setErrorMessage('Ein Konto mit dieser E-Mail-Adresse existiert bereits. Bitte logge dich ein.');
           return;
         }
 
-        // 2. Manuell ein Profil erstellen für neue Benutzer
-        try {
-          const { error: profileError } = await supabase
-            .from('profiles')
-            .insert({
-              id: authData.user.id,
-              full_name: name,
-              username: '', // Optional kannst du hier eine Standard-Username setzen
-              avatar_url: '',
-              updated_at: new Date().toISOString(),
-            });
-            
-          if (profileError) {
-            console.error('Error when creating the profile:', profileError.message);
-            // Wenn das Profil nicht erstellt werden kann, ist wahrscheinlich der Benutzer bereits vorhanden
-            if (profileError.message.includes('row-level security') || profileError.message.includes('duplicate')) {
-              setErrorMessage('An account with this e-mail address already exists. Please log in.');
-              return;
-            }
-            // Für andere Profil-Fehler werfen wir einen allgemeinen Fehler
-            throw new Error('Error when creating the user profile');
-          }
-        } catch (profileCreateError: any) {
-          console.error('Unexpected error when creating a profile:', profileCreateError);
-          setErrorMessage('Error creating the user profile. Please try again.');
+        // Zusätzliche Prüfung: Wenn der Benutzer bereits bestätigt ist
+        if (authData.user.email_confirmed_at) {
+          setErrorMessage('Ein Konto mit dieser E-Mail-Adresse existiert bereits. Bitte logge dich ein.');
           return;
         }
-        
-        // Erfolgreich registriert - nur anzeigen wenn wirklich ein neuer Benutzer erstellt wurde
-        setSuccessMessage('Registration successful! Please confirm your e-mail address.');
+
+        // Das Profil wird automatisch durch den Database Trigger erstellt
+        // Erfolgreich registriert
+        setSuccessMessage('Registrierung erfolgreich! Bitte bestätige deine E-Mail-Adresse.');
       }
     } catch (error: any) {
-      console.error('Error during registration:', error.message);
-      setErrorMessage(error.message || 'Error during registration');
+      console.error('Fehler bei der Registrierung:', error.message);
+      setErrorMessage(error.message || 'Fehler bei der Registrierung');
     } finally {
       setLoading(false);
     }
@@ -297,6 +292,8 @@ const AuthModal: React.FC<AuthModalProps> = ({
                       name="remember-me"
                       type="checkbox"
                       className="h-4 w-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
+                      checked={rememberMe}
+                      onChange={(e) => setRememberMe(e.target.checked)}
                     />
                     <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-700">
                       Remember me
@@ -448,7 +445,7 @@ const AuthModal: React.FC<AuthModalProps> = ({
                     />
                   </div>
                   {confirmPassword && password !== confirmPassword && (
-                    <p className="mt-1 text-sm text-red-600">The passwords do not match</p>
+                    <p className="mt-1 text-sm text-red-600">Die Passwörter stimmen nicht überein</p>
                   )}
                 </div>
                 
