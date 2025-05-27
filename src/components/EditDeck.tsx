@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { ArrowLeft } from 'lucide-react';
 import { supabase } from '../supabase/client';
+import ConfirmDeckDeletionModal from './ConfirmDeckDeletionModal';
 
 const categories = [
   'Languages', 'Science', 'History', 'Mathematics', 'Literature',
@@ -30,13 +31,15 @@ export type EditDeckProps = {
   onCancel: () => void;
   onUpdateSuccess: () => void;
   onAddCard: () => void;
+  onDeleteSuccess: () => void;
 };
 
-const EditDeck: React.FC<EditDeckProps> = ({ deck, onCancel, onUpdateSuccess, onAddCard }) => {
+const EditDeck: React.FC<EditDeckProps> = ({ deck, onCancel, onUpdateSuccess, onAddCard, onDeleteSuccess }) => {
   const [deckName, setDeckName] = useState(deck.name);
   const [category, setCategory] = useState(deck.category);
   const [color, setColor] = useState(deck.color);
   const [loading, setLoading] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
 
   const handleUpdateDeck = async () => {
     setLoading(true);
@@ -62,6 +65,12 @@ const EditDeck: React.FC<EditDeckProps> = ({ deck, onCancel, onUpdateSuccess, on
       onUpdateSuccess();
     }
     setLoading(false);
+  };
+
+  const handleDelete = async () => {
+    await supabase.from('basic_cards').delete().eq('deck_id', deck.id);
+    await supabase.from('decks').delete().eq('id', deck.id);
+    onDeleteSuccess();
   };
 
   return (
@@ -146,32 +155,50 @@ const EditDeck: React.FC<EditDeckProps> = ({ deck, onCancel, onUpdateSuccess, on
           <button
             onClick={handleUpdateDeck}
             disabled={!deckName.trim() || loading}
-            className=" text-white px-6 py-2 rounded-lg transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed, hover:scale-105"
+            className="text-white px-6 py-2 rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed hover:scale-105 transition-all"
             style={{ backgroundColor: color }}
           >
             {loading ? 'Updating...' : 'Save Changes'}
           </button>
           <button
             onClick={onCancel}
-            className="bg-white px-6 py-2 rounded-lg border border-blue-600 hover:scale-105 transition-colors font-medium"
+            className="bg-white px-6 py-2 rounded-lg border hover:scale-105 transition-all font-medium"
             style={{ color: color, borderColor: color }}
           >
             Cancel
           </button>
+
+          <button
+            onClick={() => setShowDeleteModal(true)}
+            className="bg-red-600 text-white ml-auto px-6 py-2 rounded-lg border hover:scale-105 hover:bg-red-700 transition-all font-medium"
+          >
+            Delete
+          </button>
         </div>
+
+        {showDeleteModal && (
+          <ConfirmDeckDeletionModal
+            deckName={deck.name}
+            onCancel={() => setShowDeleteModal(false)}
+            onConfirm={async () => {
+              await handleDelete();
+              setShowDeleteModal(false);
+            }}
+          />
+        )}
       </div>
 
       {/* Footer Buttons */}
       <div className="flex gap-3 mt-6">
         <button
           onClick={onCancel}
-          className="bg-gray-200 text-gray-700 px-4 py-2 rounded hover:bg-gray-300 transition-colors hover:scale-105 font-medium"
+          className="bg-gray-200 text-gray-700 px-4 py-2 rounded hover:bg-gray-300 transition-all hover:scale-105 font-medium"
         >
           Back to Decks
         </button>
         <button
           onClick={onAddCard}
-          className="text-white px-4 py-2 rounded hover:scale-105 transition-colors font-medium"
+          className="text-white px-4 py-2 rounded hover:scale-105 transition-all font-medium"
           style={{ backgroundColor: color }}
         >
           + Add Card

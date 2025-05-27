@@ -271,6 +271,10 @@ const StudyPage: React.FC = () => {
       <EditDeck
         deck={selectedDeck}
         onCancel={() => setCurrentView('decks')}
+        onDeleteSuccess={async () => {
+          await fetchDecks();
+          setCurrentView('decks');
+        }}
         onUpdateSuccess={() => {
           // refetch decks or update local state
           fetchDecks();
