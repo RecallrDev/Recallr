@@ -5,6 +5,7 @@ import DeckList from './DeckList';
 import CreateDeck from './CreateDeck';
 import StudySession from './StudySession';
 import CreateCard from './CreateCard';
+import EditDeck from './EditDeck';
 
 import type { Card } from '../types/Card';
 import type { Deck } from '../types/Deck';
@@ -265,50 +266,22 @@ const StudyPage: React.FC = () => {
       );
 
     case 'deck-detail':
-      if (!selectedDeck) return null;
-      return (
-        <div className="max-w-2xl mx-auto p-6">
-          <h1 className="text-2xl font-bold mb-4">{selectedDeck.name}</h1>
-          <p className="mb-2">
-            <strong>Category:</strong> {selectedDeck.category}
-          </p>
-          <p className="mb-2">
-            <strong>Color:</strong>{' '}
-            <span
-              className="inline-block w-4 h-4 rounded-full border border-gray-300"
-              style={{ backgroundColor: selectedDeck.color }}
-            />
-          </p>
-          <p className="mb-6 text-gray-600">
-            {selectedDeck.cardCount} cards&nbsp;|&nbsp;
-            {selectedDeck.lastStudied
-              ? `Last studied: ${new Date(selectedDeck.lastStudied).toLocaleString('de-DE', {
-                  day:   '2-digit',
-                  month: '2-digit',
-                  year:  'numeric',
-                  hour:  '2-digit',
-                  minute:'2-digit',
-                })}`
-              : 'Never studied'}
-          </p>
+    if (!selectedDeck) return null;
+    return (
+      <EditDeck
+        deck={selectedDeck}
+        onCancel={() => setCurrentView('decks')}
+        onUpdateSuccess={() => {
+          // refetch decks or update local state
+          fetchDecks();
+          setCurrentView('decks');
+        }}
+        onAddCard={() => {
+          setCurrentView('create-card');
+        }}
+      />
+    );
 
-          <div className="flex gap-3 mb-6">
-            <button
-              onClick={() => setCurrentView('decks')}
-              className="bg-gray-200 text-gray-700 px-4 py-2 rounded hover:bg-gray-300 transition-colors hover:scale-105 font-medium"
-            >
-              Back to Decks
-            </button>
-            <button
-              onClick={() => setCurrentView('create-card')}
-              className=" text-white px-4 py-2 rounded hover:scale-105 transition-colors font-medium"
-              style={{ backgroundColor: selectedDeck.color }}
-            >
-              + Add Card
-            </button>
-          </div>
-        </div>
-      );
 
     case 'create-card':
       if (!selectedDeck) return null;
