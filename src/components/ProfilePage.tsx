@@ -420,10 +420,12 @@ const ProfilePage: React.FC = () => {
               </div>
               <button
                 onClick={() => fileInputRef.current?.click()}
-                className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                className="absolute inset-0 flex items-center justify-center bg-black/60 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-200 aspect-square"
                 disabled={uploadingAvatar}
               >
-                <Upload className="w-6 h-6 text-white" />
+                <div className="flex items-center justify-center w-full h-full">
+                  <Upload className="w-6 h-6 text-white" />
+                </div>
               </button>
               <input
                 type="file"
