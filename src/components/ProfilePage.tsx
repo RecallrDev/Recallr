@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from './AuthContext';
 import { supabase } from '../supabase/client';
-import { User, CheckCircle, AlertCircle, Mail, Edit, Save, LogOut } from 'lucide-react';
+import { User, CheckCircle, AlertCircle, Mail, Edit, Save, LogOut, Lock, Trash2, Upload, X } from 'lucide-react';
 
 type Profile = {
   username: string;
@@ -14,6 +14,7 @@ type Profile = {
 const ProfilePage: React.FC = () => {
   const { user, loading, signOut } = useAuth();
   const navigate = useNavigate();
+  const fileInputRef = useRef<HTMLInputElement>(null);
   
   const [profile, setProfile] = useState<Profile | null>(null);
   const [isEditing, setIsEditing] = useState(false);
@@ -22,6 +23,14 @@ const ProfilePage: React.FC = () => {
   const [loadingProfile, setLoadingProfile] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [deleteConfirmation, setDeleteConfirmation] = useState('');
 
   // Prüfen, ob der Benutzer angemeldet ist
   useEffect(() => {
@@ -60,9 +69,11 @@ const ProfilePage: React.FC = () => {
           setFullName(data.full_name || user.user_metadata?.full_name || '');
           setUsername(data.username || '');
         }
-      } catch (error: any) {
-        console.error('Fehler beim Laden des Profils:', error.message);
-        setError('Fehler beim Laden des Profils');
+      } catch (error: unknown) {
+        if (error instanceof Error) {
+          console.error('Fehler beim Laden des Profils:', error.message);
+          setError('Fehler beim Laden des Profils');
+        }
       } finally {
         setLoadingProfile(false);
       }
@@ -98,9 +109,11 @@ const ProfilePage: React.FC = () => {
       setSuccess('Profil erfolgreich aktualisiert');
       setProfile(prev => prev ? { ...prev, full_name: fullName, username } : null);
       setIsEditing(false);
-    } catch (error: any) {
-      console.error('Fehler beim Aktualisieren des Profils:', error.message);
-      setError('Fehler beim Aktualisieren des Profils');
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        console.error('Fehler beim Aktualisieren des Profils:', error.message);
+        setError('Fehler beim Aktualisieren des Profils');
+      }
     }
   };
 
@@ -126,9 +139,199 @@ const ProfilePage: React.FC = () => {
       }
 
       setSuccess('Bestätigungs-E-Mail wurde erneut gesendet');
-    } catch (error: any) {
-      console.error('Fehler beim Senden der E-Mail:', error.message);
-      setError('Fehler beim Senden der E-Mail');
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        console.error('Fehler beim Senden der E-Mail:', error.message);
+        setError('Fehler beim Senden der E-Mail');
+      }
+    }
+  };
+
+  // Avatar upload handler
+  const handleAvatarUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    try {
+      setError(null);
+      setSuccess(null);
+      setUploadingAvatar(true);
+
+      const file = event.target.files?.[0];
+      if (!file) return;
+
+      // Validate file type
+      if (!file.type.startsWith('image/')) {
+        throw new Error('Bitte wähle eine Bilddatei aus');
+      }
+
+      // Validate file size (max 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        throw new Error('Die Datei ist zu groß. Maximale Größe: 5MB');
+      }
+
+      if (!user) return;
+
+      // Delete old avatar if it exists
+      if (profile?.avatar_url) {
+        const { error: deleteError } = await supabase.storage
+          .from('avatars')
+          .remove([user.id]);
+
+        if (deleteError) {
+          console.warn('Fehler beim Löschen des alten Profilbilds:', deleteError);
+          // Continue with upload even if delete fails
+        }
+      }
+
+      // Upload to Supabase Storage using user ID as filename
+      const { error: uploadError } = await supabase.storage
+        .from('avatars')
+        .upload(user.id, file, {
+          upsert: true // This will overwrite the file if it exists
+        });
+
+      if (uploadError) {
+        throw uploadError;
+      }
+
+      // Get signed URL (valid for 1 hour)
+      const { data } = await supabase.storage
+        .from('avatars')
+        .createSignedUrl(user.id, 3600);
+
+      if (!data?.signedUrl) {
+        throw new Error('Konnte keine signierte URL erstellen');
+      }
+
+      // Update profile with new avatar URL
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({ avatar_url: data.signedUrl })
+        .eq('id', user.id);
+
+      if (updateError) {
+        throw updateError;
+      }
+
+      setProfile(prev => prev ? { ...prev, avatar_url: data.signedUrl } : null);
+      setSuccess('Profilbild erfolgreich aktualisiert');
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        console.error('Fehler beim Hochladen des Profilbilds:', error.message);
+        setError(error.message || 'Fehler beim Hochladen des Profilbilds');
+      }
+    } finally {
+      setUploadingAvatar(false);
+    }
+  };
+
+  // Function to refresh avatar URL
+  const refreshAvatarUrl = async () => {
+    if (!user) return;
+    
+    try {
+      const { data } = await supabase.storage
+        .from('avatars')
+        .createSignedUrl(user.id, 3600);
+
+      if (data?.signedUrl) {
+        setProfile(prev => prev ? { ...prev, avatar_url: data.signedUrl } : null);
+      }
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        console.error('Fehler beim Aktualisieren der Avatar-URL:', error.message);
+      }
+    }
+  };
+
+  // Refresh avatar URL every 50 minutes (before the 1-hour expiry)
+  useEffect(() => {
+    if (profile?.avatar_url) {
+      const interval = setInterval(() => {
+        refreshAvatarUrl();
+      }, 50 * 60 * 1000); // 50 minutes
+
+      return () => clearInterval(interval);
+    }
+  }, [profile?.avatar_url]);
+
+  // Password change handler
+  const handlePasswordChange = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      setError(null);
+      setSuccess(null);
+
+      if (newPassword !== confirmPassword) {
+        throw new Error('Die Passwörter stimmen nicht überein');
+      }
+
+      if (newPassword.length < 6) {
+        throw new Error('Das Passwort muss mindestens 6 Zeichen lang sein');
+      }
+
+      const { error } = await supabase.auth.updateUser({
+        password: newPassword
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      setSuccess('Passwort erfolgreich geändert');
+      setShowPasswordModal(false);
+      setCurrentPassword('');
+      setNewPassword('');
+      setConfirmPassword('');
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        console.error('Fehler beim Ändern des Passworts:', error.message);
+        setError(error.message || 'Fehler beim Ändern des Passworts');
+      }
+    }
+  };
+
+  // Profile deletion handler
+  const handleProfileDeletion = async () => {
+    try {
+      setError(null);
+      setSuccess(null);
+
+      if (deleteConfirmation !== 'DELETE') {
+        setError('Bitte gib "DELETE" ein, um dein Profil zu löschen');
+        return;
+      }
+
+      if (!user) {
+        setError('Kein Benutzer gefunden');
+        setShowDeleteModal(false);
+        return;
+      }
+
+      // Delete user account using RPC function
+      const { error: deleteError } = await supabase.rpc('delete_user');
+      
+      if (deleteError) {
+        console.error('Fehler beim Löschen des Accounts:', deleteError);
+        setError('Fehler beim Löschen des Accounts: ' + deleteError.message);
+        setShowDeleteModal(false);
+        return;
+      }
+
+      // If we get here, deletion was successful
+      setShowDeleteModal(false);
+      setShowSuccessModal(true);
+      
+      // Wait for 2 seconds to show the success message
+      setTimeout(async () => {
+        setShowSuccessModal(false);
+        await signOut();
+        navigate('/');
+      }, 5000);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        console.error('Fehler beim Löschen des Profils:', error.message);
+        setError(error.message || 'Fehler beim Löschen des Profils');
+      }
+      setShowDeleteModal(false);
     }
   };
 
@@ -203,17 +406,40 @@ const ProfilePage: React.FC = () => {
           )}
           
           <div className="flex flex-col items-center mb-6">
-            <div className="w-24 h-24 rounded-full bg-purple-100 flex items-center justify-center mb-4">
-              {profile.avatar_url ? (
-                <img
-                  src={profile.avatar_url}
-                  alt="Profilbild"
-                  className="w-24 h-24 rounded-full object-cover"
-                />
-              ) : (
-                <User className="w-12 h-12 text-purple-600" />
-              )}
+            <div className="relative group">
+              <div className="w-24 h-24 rounded-full bg-purple-100 flex items-center justify-center mb-4 overflow-hidden">
+                {profile?.avatar_url ? (
+                  <img
+                    src={profile.avatar_url}
+                    alt="Profilbild"
+                    className="w-24 h-24 rounded-full object-cover"
+                  />
+                ) : (
+                  <User className="w-12 h-12 text-purple-600" />
+                )}
+              </div>
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                disabled={uploadingAvatar}
+              >
+                <Upload className="w-6 h-6 text-white" />
+              </button>
+              <input
+                type="file"
+                ref={fileInputRef}
+                onChange={handleAvatarUpload}
+                accept="image/*"
+                className="hidden"
+                disabled={uploadingAvatar}
+              />
             </div>
+            
+            {uploadingAvatar && (
+              <div className="mt-2 text-sm text-gray-500">
+                Profilbild wird hochgeladen...
+              </div>
+            )}
             
             {isEditing ? (
               <div className="w-full">
@@ -315,14 +541,162 @@ const ProfilePage: React.FC = () => {
               </div>
             </div>
             
-            <div className="mt-6">
-              <p className="text-sm text-gray-500">
-                Account created on: {new Date(user.created_at || '').toLocaleDateString()}
-              </p>
+            <div className="mt-6 space-y-4">
+              <button
+                onClick={() => setShowPasswordModal(true)}
+                className="w-full py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 flex items-center justify-center"
+              >
+                <Lock className="w-4 h-4 mr-2" />
+                Passwort ändern
+              </button>
+              
+              <button
+                onClick={() => setShowDeleteModal(true)}
+                className="w-full py-2 px-4 border border-red-300 rounded-md shadow-sm text-sm font-medium text-red-700 bg-white hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 flex items-center justify-center"
+              >
+                <Trash2 className="w-4 h-4 mr-2" />
+                Profil löschen
+              </button>
             </div>
           </div>
         </div>
       </div>
+
+      {/* Password Change Modal */}
+      {showPasswordModal && (
+        <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-xl p-6 max-w-md w-full shadow-xl transform transition-all">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-bold text-gray-900">Passwort ändern</h2>
+              <button
+                onClick={() => setShowPasswordModal(false)}
+                className="text-gray-400 hover:text-gray-500 transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <form onSubmit={handlePasswordChange} className="space-y-4">
+              <div>
+                <label htmlFor="current-password" className="block text-sm font-medium text-gray-700 mb-1">
+                  Aktuelles Passwort
+                </label>
+                <input
+                  type="password"
+                  id="current-password"
+                  value={currentPassword}
+                  onChange={(e) => setCurrentPassword(e.target.value)}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-transparent"
+                  required
+                />
+              </div>
+              
+              <div>
+                <label htmlFor="new-password" className="block text-sm font-medium text-gray-700 mb-1">
+                  Neues Passwort
+                </label>
+                <input
+                  type="password"
+                  id="new-password"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-transparent"
+                  required
+                />
+              </div>
+              
+              <div>
+                <label htmlFor="confirm-password" className="block text-sm font-medium text-gray-700 mb-1">
+                  Passwort bestätigen
+                </label>
+                <input
+                  type="password"
+                  id="confirm-password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-transparent"
+                  required
+                />
+              </div>
+              
+              <div className="flex space-x-2 pt-2">
+                <button
+                  type="submit"
+                  className="flex-1 py-2 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 transition-colors"
+                >
+                  Passwort ändern
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowPasswordModal(false)}
+                  className="flex-1 py-2 px-4 border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 transition-colors"
+                >
+                  Abbrechen
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Profile Modal */}
+      {showDeleteModal && (
+        <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-xl p-6 max-w-md w-full shadow-xl transform transition-all">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-bold text-red-600">Profil löschen</h2>
+              <button
+                onClick={() => setShowDeleteModal(false)}
+                className="text-gray-400 hover:text-gray-500 transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <p className="text-gray-600 mb-4">
+              Bist du sicher, dass du dein Profil löschen möchtest? Diese Aktion kann nicht rückgängig gemacht werden.
+            </p>
+            <div className="mb-4">
+              <label htmlFor="delete-confirmation" className="block text-sm font-medium text-gray-700 mb-1">
+                Bitte gib "DELETE" ein, um zu bestätigen
+              </label>
+              <input
+                type="text"
+                id="delete-confirmation"
+                value={deleteConfirmation}
+                onChange={(e) => setDeleteConfirmation(e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-600 focus:border-transparent"
+                placeholder="DELETE"
+              />
+            </div>
+            <div className="flex space-x-2">
+              <button
+                onClick={handleProfileDeletion}
+                className="flex-1 py-2 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors"
+              >
+                Profil löschen
+              </button>
+              <button
+                onClick={() => setShowDeleteModal(false)}
+                className="flex-1 py-2 px-4 border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 transition-colors"
+              >
+                Abbrechen
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Success Modal */}
+      {showSuccessModal && (
+        <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-xl p-6 max-w-md w-full shadow-xl transform transition-all">
+            <div className="flex flex-col items-center text-center">
+              <CheckCircle className="w-16 h-16 text-green-500 mb-4" />
+              <h2 className="text-xl font-bold text-gray-900 mb-2">Profil erfolgreich gelöscht</h2>
+              <p className="text-gray-600">Du wirst in Kürze zur Startseite weitergeleitet...</p>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
