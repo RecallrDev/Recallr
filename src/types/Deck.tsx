@@ -1,19 +1,10 @@
-/**
- * Core representation of a deck across the app.
- */
-export interface Deck {
-  /** Unique identifier */
+export type Deck = {
   id: string;
-  /** Human-readable deck name */
+  user_id: string;
   name: string;
-  /** Hex color code for deck styling */
   color: string;
-  /** Category name for grouping */
   category: string;
-  /** Number of cards in the deck */
+  last_studied?: string;
+  created_at: string;
   cardCount: number;
-  // ISO date string of when the deck was created
-  createdAt?: string;
-  /** ISO date or human-friendly string of last study session */
-  lastStudied?: string;
-}
+};

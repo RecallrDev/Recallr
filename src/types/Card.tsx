@@ -1,13 +1,25 @@
-/**
- * A single flashcard with question/answer sides. 
- */
-export interface Card {
-  /** Unique identifier within a deck */
-  id: number;
-  /** Front side content (question) */
+export type BasicCard = {
+  id: string;
+  deck_id: string;
   front: string;
-  /** Back side content (answer) */
   back: string;
-  /** ID of the deck this card belongs to */
-  deck_id: string; 
-}
+  created_at: string;
+  type: 'basic';
+};
+
+export type MCChoice = {
+  id: string;
+  answer_text: string;
+  is_correct: boolean;
+};
+
+export type MultipleChoiceCard = {
+  id: string;
+  deck_id: string;
+  question: string;
+  created_at: string;
+  choices: MCChoice[];
+  type: 'multiple_choice';
+};
+
+export type Card = BasicCard | MultipleChoiceCard;

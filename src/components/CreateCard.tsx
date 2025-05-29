@@ -1,7 +1,8 @@
 // src/components/CreateCard.tsx
 import React, { useState } from 'react';
 import { ArrowLeft } from 'lucide-react';
-import { supabase } from '../supabase/client';
+import CreateBasicCard from './CreateBasicCard';
+import CreateMCCard from './CreateMCCard';
 
 export type CreateCardProps = {
   deckId: string;
@@ -10,111 +11,92 @@ export type CreateCardProps = {
   onCancel: () => void;
 };
 
-const CreateCard: React.FC<CreateCardProps> = ({ deckId, deckColor, onCreateSuccess, onCancel }) => {
-  const [frontText, setFrontText] = useState('');
-  const [backText, setBackText] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
+/**
+ * CreateCard page with two tabs:
+ * - Basic (renders CreateBasicCard)
+ * - Multiple Choice (renders CreateMultipleChoiceCard)
+ *
+ * Switching tabs instantly swaps the form below.
+ */
+const CreateCard: React.FC<CreateCardProps> = ({
+  deckId,
+  deckColor,
+  onCreateSuccess,
+  onCancel,
+}) => {
+  // 0 = Basic, 1 = Multiple Choice
+  const [selectedTab, setSelectedTab] = useState<0 | 1>(0);
 
-  const handleCreateCard = async () => {
-    if (!frontText.trim() || !backText.trim()) {
-      return;
-    }
-
-    setIsSubmitting(true);
-
-    // 1) Get current user (for RLS)
-    const {
-      data: { user },
-      error: userError,
-    } = await supabase.auth.getUser();
-
-    if (userError || !user) {
-      console.error('You must be logged in to create a card!', userError);
-      setIsSubmitting(false);
-      return;
-    }
-
-    // 2) Insert into "basic_cards"
-    const { error: insertError } = await supabase
-      .from('basic_cards')
-      .insert({
-        deck_id: deckId,
-        front: frontText.trim(),
-        back: backText.trim(),
-      });
-
-    if (insertError) {
-      console.error('Error creating card:', insertError);
-      setIsSubmitting(false);
+  // Helper to render the appropriate form
+  const renderForm = () => {
+    if (selectedTab === 0) {
+      return (
+        <CreateBasicCard
+          deckId={deckId}
+          deckColor={deckColor}
+          onCreateSuccess={onCreateSuccess}
+          onCancel={onCancel}
+        />
+      );
     } else {
-      // 3) Clear inputs
-      setFrontText('');
-      setBackText('');
-      setIsSubmitting(false);
-
-      // 4) Notify parent so it can re‐fetch counts, etc.
-      onCreateSuccess();
+      return (
+        <CreateMCCard
+          deckId={deckId}
+          deckColor={deckColor}
+          onCreateSuccess={onCreateSuccess}
+          onCancel={onCancel}
+        />
+      );
     }
   };
 
   return (
     <div className="max-w-2xl mx-auto p-6">
-      {/* Header */}
-      <div className="flex items-center gap-4 mb-8">
+      {/* Header & Back Button  */}
+      <div className="flex items-center gap-4 mb-6">
         <button onClick={onCancel} className="text-gray-600 hover:text-gray-900">
           <ArrowLeft size={24} />
         </button>
         <h1 className="text-3xl font-bold text-gray-900">Add New Card</h1>
       </div>
 
-      {/* Form Card */}
-      <div className="bg-white rounded-lg shadow-md border border-gray-200 p-6 space-y-6">
-        {/* Front Text */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Front
-          </label>
-          <textarea
-            value={frontText}
-            onChange={(e) => setFrontText(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            placeholder="Enter front text..."
-            rows={3}
-          />
-        </div>
+      {/* Tabs */}
+      <div className="flex border-b border-gray-200 mb-6">
+        {/* Basic Tab */}
+        <button
+          onClick={() => setSelectedTab(0)}
+          style={{
+            color: selectedTab === 0 ? deckColor : 'inherit',
+            borderColor: selectedTab === 0 ? deckColor : 'transparent',
+          }}
+          className={`flex-1 text-center py-2 font-medium transition ${
+            selectedTab === 0
+              ? 'border-b-2'
+              : 'text-gray-600 hover:text-gray-800'
+          }`}
+        >
+          Basic
+        </button>
 
-        {/* Back Text */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Back
-          </label>
-          <textarea
-            value={backText}
-            onChange={(e) => setBackText(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            placeholder="Enter back text..."
-            rows={3}
-          />
-        </div>
-
-        {/* Actions */}
-        <div className="flex gap-3 pt-2">
-          <button
-            onClick={handleCreateCard}
-            style={ { backgroundColor: deckColor || '#3B82F6' }}
-            disabled={!frontText.trim() || !backText.trim() || isSubmitting}
-            className=" text-white px-6 py-2 rounded-lg hover:scale-105 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {isSubmitting ? 'Saving…' : 'Create Card'}
-          </button>
-          <button
-            onClick={onCancel}
-            className="bg-white text-gray-600 px-6 py-2 rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors font-medium"
-          >
-            Cancel
-          </button>
-        </div>
+        {/* Multiple Choice Tab */}
+        <button
+          onClick={() => setSelectedTab(1)}
+          style={{
+            color: selectedTab === 1 ? deckColor : 'inherit',
+            borderColor: selectedTab === 1 ? deckColor : 'transparent',
+          }}
+          className={`flex-1 text-center py-2 font-medium transition ${
+            selectedTab === 1
+              ? 'border-b-2'
+              : 'text-gray-600 hover:text-gray-800'
+          }`}
+        >
+          Multiple Choice
+        </button>
       </div>
+
+      {/* Form (Basic or MC) */}
+      <div>{renderForm()}</div>
     </div>
   );
 };

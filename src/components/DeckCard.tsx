@@ -29,8 +29,8 @@ const DeckCard: React.FC<DeckCardProps> = ({ deck, onStudy, onEdit }) => {
         <div className="space-y-2 mb-6">
           <p className="text-gray-600">{deck.cardCount} cards</p>
           <p className="text-sm text-gray-500">
-            {deck.lastStudied
-              ? `Last studied: ${new Date(deck.lastStudied).toLocaleString('de-DE', {
+            {deck.last_studied
+              ? `Last studied: ${new Date(deck.last_studied).toLocaleString('de-DE', {
                   day:   '2-digit',
                   month: '2-digit',
                   year:  'numeric',

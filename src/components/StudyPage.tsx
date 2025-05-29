@@ -1,4 +1,3 @@
-// src/components/StudyPage.tsx
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../supabase/client';
 import DeckList from './DeckList';
@@ -7,10 +6,16 @@ import StudySession from './StudySession';
 import CreateCard from './CreateCard';
 import EditDeck from './EditDeck';
 
-import type { Card } from '../types/Card';
+import type { Card, BasicCard, MultipleChoiceCard } from '../types/Card';
 import type { Deck } from '../types/Deck';
 
-type View = 'decks' | 'create-deck' | 'create-card' | 'study' | 'deck-detail';
+type View = 
+  | 'decks' 
+  | 'create-deck' 
+  | 'create-card'
+  | 'select-card-type' 
+  | 'study' 
+  | 'deck-detail';
 
 const StudyPage: React.FC = () => {
   const [currentView, setCurrentView] = useState<View>('decks');
@@ -28,7 +33,7 @@ const StudyPage: React.FC = () => {
   const [currentCardIndex, setCurrentCardIndex] = useState(0);
   const [showAnswer, setShowAnswer] = useState(false);
 
-  // 1) Fetch all decks for this user, augment each with cardCount
+  // 1) Fetch all decks for this user
   const fetchDecks = async () => {
     setIsLoading(true);
 
@@ -59,18 +64,28 @@ const StudyPage: React.FC = () => {
 
     const withCounts: Deck[] = await Promise.all(
       rawDecks.map(async (deck) => {
-        const { count, error: countError } = await supabase
+        const basicCountPromise = supabase
           .from('basic_cards')
           .select('id', { head: true, count: 'exact' })
           .eq('deck_id', deck.id);
 
-        if (countError) {
-          console.error(`Error counting basic_cards for deck ${deck.id}`, countError);
-        }
+        const mcCountPromise = supabase
+          .from('mc_cards')
+          .select('id', { head: true, count: 'exact' })
+          .eq('deck_id', deck.id);
+
+        const [
+          { count: basicCount = 0, error: basicErr },
+          { count: mcCount = 0, error: mcErr },
+        ] = await Promise.all([basicCountPromise, mcCountPromise]);
+
+        if (basicErr) console.error('Error counting basic:', basicErr);
+        if (mcErr) console.error('Error counting MC:', mcErr);
+
         return {
           ...deck,
-          cardCount: count ?? 0,
-          lastStudied: deck.last_studied ?? undefined,
+          cardCount: (basicCount ?? 0) + (mcCount ?? 0),
+          last_studied: deck.last_studied ?? undefined,
         };
       })
     );
@@ -79,7 +94,7 @@ const StudyPage: React.FC = () => {
     setIsLoading(false);
   };
 
-  // 2) On mount, fetch decks and listen for auth changes
+  // 2) Fetch decks and listen for auth changes
   useEffect(() => {
     fetchDecks();
 
@@ -123,21 +138,67 @@ const StudyPage: React.FC = () => {
     setSelectedDeck(deck);
     setCurrentView('study');
 
-    const { data: basic_cards, error: cardError } = await supabase
+    // 1) Fetch Basic Cards
+    const { data: basicData, error: basicError } = await supabase
       .from('basic_cards')
       .select('*')
       .eq('deck_id', deck.id);
 
-    if (cardError) {
-      console.error('Error fetching basic_cards for deck:', cardError);
-      setStudyCards([]);
-    } else {
-      setStudyCards(basic_cards || []);
+    if (basicError) {
+      console.error('Error fetching basic cards:', basicError);
     }
 
+    // 2) Fetch MC Cards
+    const { data: mcRows, error: mcError } = await supabase
+      .from('mc_cards')
+      .select(`
+        id,
+        question,
+        created_at,
+        mc_choices (
+          id,
+          answer_text,
+          is_correct
+        )
+      `)
+      .eq('deck_id', deck.id);
+
+    if (mcError) {
+      console.error('Error fetching MC cards:', mcError);
+    }
+
+    // 3) Transform both into a Card[] array
+
+    const basics: BasicCard[] = (basicData || []).map((bc) => ({
+      id: bc.id,
+      deck_id: bc.deck_id,
+      front: bc.front,
+      back: bc.back,
+      created_at: bc.created_at,
+      type: 'basic',
+    }));
+
+    const mcs: MultipleChoiceCard[] = (mcRows || []).map((mc) => ({
+      id: mc.id,
+      deck_id: deck.id,
+      question: mc.question,
+      created_at: mc.created_at,
+      choices: (mc.mc_choices || []).map((c) => ({
+        id: c.id,
+        answer_text: c.answer_text,
+        is_correct: c.is_correct,
+      })),
+      type: 'multiple_choice',
+    }));
+
+    // 4) Combine
+    const combined: Card[] = [...basics, ...mcs];
+
+    setStudyCards(combined);
     setCurrentCardIndex(0);
     setShowAnswer(false);
   };
+
 
   // 4) Study session controls
   const handleFlipCard = () => {
@@ -150,8 +211,8 @@ const StudyPage: React.FC = () => {
     setShowAnswer(false);
     return;
   }
-
-  // OTHERWISE, we're at the last card → end of session:
+  
+  // If user is at the last card, update the last studied timestamp
   // 1) Update lastStudied for this deck in Supabase
   if (selectedDeck) {
     console.log('Updating last studied timestamp for deck:', selectedDeck.id);
@@ -162,7 +223,7 @@ const StudyPage: React.FC = () => {
       .from('decks')
       .update({ last_studied: nowIso })
       .eq('id', selectedDeck.id)
-      .select(); // Add .select() to return the updated row
+      .select();
 
     console.log('Supabase update result:', { data, error: updateError });
 
@@ -170,10 +231,10 @@ const StudyPage: React.FC = () => {
       console.error('Failed to update last_studied:', updateError);
     } else {
       console.log('Successfully updated database');
-      // 2) Update selectedDeck immediately with the new timestamp
+      // 2) Update selectedDeck with the new timestamp
       setSelectedDeck({
         ...selectedDeck,
-        lastStudied: nowIso
+        last_studied: nowIso
       });
 
       // 3) Re-fetch decks so that the deck list shows updated info
@@ -181,12 +242,18 @@ const StudyPage: React.FC = () => {
     }
   }
 
-  // 4) Finally, return to the deck list
+  // 4) Return to the deck list
   setCurrentView('decks');
   console.log('Study session completed, returning to deck list');
 };
 
-
+  const handlePrevCard = async () => {
+    if (currentCardIndex > 0) {
+      setCurrentCardIndex((prev) => prev - 1);
+      setShowAnswer(false);
+      return;
+    }
+  }
 
   const handleResetStudySession = () => {
     setCurrentCardIndex(0);
@@ -196,19 +263,16 @@ const StudyPage: React.FC = () => {
     setCurrentView('decks');
   };
 
-  // 5) When a card is created successfully, re-fetch deck counts but stay on CreateCard
+  // 5) When a card is created successfully, re-fetch deck counts
   const handleCreateCardSuccess = async () => {
-    // Re-fetch all decks so that cardCount is up-to-date
+    // Re-fetch all decks so that cardCount is up to date
     await fetchDecks();
 
-    // Update `selectedDeck` so that its cardCount reflects the new value
+    // Update selectedDeck so that its cardCount reflects the new value
     if (selectedDeck) {
       const updated = decks.find((d) => d.id === selectedDeck.id) ?? selectedDeck;
       setSelectedDeck(updated);
     }
-
-    // IMPORTANT: Do NOT change `currentView`.  
-    // We stay on 'create-card' so the user can make another card.
   };
 
   // Render different views
@@ -276,7 +340,6 @@ const StudyPage: React.FC = () => {
           setCurrentView('decks');
         }}
         onUpdateSuccess={() => {
-          // refetch decks or update local state
           fetchDecks();
           setCurrentView('decks');
         }}
@@ -287,17 +350,17 @@ const StudyPage: React.FC = () => {
     );
 
 
-    case 'create-card':
-      if (!selectedDeck) return null;
-      return (
-        <CreateCard
-          deckId={selectedDeck.id}
-          deckColor={selectedDeck.color}
-          onCreateSuccess={handleCreateCardSuccess}
-          onCancel={() => setCurrentView('deck-detail')
-          }
-        />
-      );
+      case 'create-card':
+    if (!selectedDeck) return null;
+    return (
+      <CreateCard
+        deckId={selectedDeck.id}
+        deckColor={selectedDeck.color}
+        onCreateSuccess={handleCreateCardSuccess}
+        onCancel={() => setCurrentView('deck-detail')}
+      />
+    );
+
 
     case 'study':
       if (!selectedDeck) return null;
@@ -308,6 +371,7 @@ const StudyPage: React.FC = () => {
           currentCardIndex={currentCardIndex}
           showAnswer={showAnswer}
           onFlipCard={handleFlipCard}
+          onPrevCard={handlePrevCard}
           onNextCard={handleNextCard}
           onReset={handleResetStudySession}
           onExit={handleExitStudySession}
