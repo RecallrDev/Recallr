@@ -260,20 +260,26 @@ const ProfilePage: React.FC = () => {
       setError(null);
       setSuccess(null);
 
+      // Basic client-side validation
+      if (!currentPassword || !newPassword || !confirmPassword) {
+        setError('Bitte fülle alle Felder aus');
+        return;
+      }
+
       if (newPassword !== confirmPassword) {
-        throw new Error('Die Passwörter stimmen nicht überein');
+        setError('Die Passwörter stimmen nicht überein');
+        return;
       }
 
-      if (newPassword.length < 6) {
-        throw new Error('Das Passwort muss mindestens 6 Zeichen lang sein');
-      }
-
-      const { error } = await supabase.auth.updateUser({
-        password: newPassword
+      // Use the secure server-side validation
+      const { error: validationError } = await supabase.rpc('validate_and_update_password', {
+        current_password: currentPassword,
+        new_password: newPassword
       });
 
-      if (error) {
-        throw error;
+      if (validationError) {
+        setError(validationError.message);
+        return;
       }
 
       setSuccess('Passwort erfolgreich geändert');
@@ -577,6 +583,21 @@ const ProfilePage: React.FC = () => {
                 <X className="w-5 h-5" />
               </button>
             </div>
+
+            {error && (
+              <div className="mb-4 p-3 bg-red-100 text-red-700 rounded-lg text-sm flex items-center">
+                <AlertCircle className="w-5 h-5 mr-2" />
+                {error}
+              </div>
+            )}
+
+            {success && (
+              <div className="mb-4 p-3 bg-green-100 text-green-700 rounded-lg text-sm flex items-center">
+                <CheckCircle className="w-5 h-5 mr-2" />
+                {success}
+              </div>
+            )}
+
             <form onSubmit={handlePasswordChange} className="space-y-4">
               <div>
                 <label htmlFor="current-password" className="block text-sm font-medium text-gray-700 mb-1">
@@ -629,7 +650,14 @@ const ProfilePage: React.FC = () => {
                 </button>
                 <button
                   type="button"
-                  onClick={() => setShowPasswordModal(false)}
+                  onClick={() => {
+                    setShowPasswordModal(false);
+                    setError(null);
+                    setSuccess(null);
+                    setCurrentPassword('');
+                    setNewPassword('');
+                    setConfirmPassword('');
+                  }}
                   className="flex-1 py-2 px-4 border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 transition-colors"
                 >
                   Abbrechen
