@@ -73,8 +73,8 @@ const ProfilePage: React.FC = () => {
         }
       } catch (error: unknown) {
         if (error instanceof Error) {
-          console.error('Fehler beim Laden des Profils:', error.message);
-          setError('Fehler beim Laden des Profils');
+          console.error('Error loading profile:', error.message);
+          setError('Error loading profile');
         }
       } finally {
         setLoadingProfile(false);
@@ -111,12 +111,12 @@ const ProfilePage: React.FC = () => {
       }
 
       if (data) {
-        setUsernameError('Dieser Benutzername ist bereits vergeben');
+        setUsernameError('This username is already taken');
       }
     } catch (error: unknown) {
       if (error instanceof Error) {
-        console.error('Fehler bei der Benutzernamen-Validierung:', error.message);
-        setUsernameError('Fehler bei der Benutzernamen-Validierung');
+        console.error('Error checking username:', error.message);
+        setUsernameError('Error checking username');
       }
     } finally {
       setIsCheckingUsername(false);
@@ -141,7 +141,7 @@ const ProfilePage: React.FC = () => {
       if (!user) return;
 
       if (usernameError) {
-        setError('Bitte wähle einen anderen Benutzernamen');
+        setError('Please choose a different username');
         return;
       }
       
@@ -160,13 +160,13 @@ const ProfilePage: React.FC = () => {
         throw error;
       }
 
-      setSuccess('Profil erfolgreich aktualisiert');
+      setSuccess('Profile successfully updated');
       setProfile(prev => prev ? { ...prev, full_name: fullName, username } : null);
       setIsEditing(false);
     } catch (error: unknown) {
       if (error instanceof Error) {
-        console.error('Fehler beim Aktualisieren des Profils:', error.message);
-        setError('Fehler beim Aktualisieren des Profils');
+        console.error('Error updating profile:', error.message);
+        setError('Error updating profile');
       }
     }
   };
@@ -180,7 +180,7 @@ const ProfilePage: React.FC = () => {
       // Füge Null-Check für die E-Mail hinzu
       const email = user?.email;
       if (!email) {
-        throw new Error('Keine E-Mail-Adresse gefunden');
+        throw new Error('No email address found');
       }
       
       const { error } = await supabase.auth.resend({
@@ -192,11 +192,11 @@ const ProfilePage: React.FC = () => {
         throw error;
       }
 
-      setSuccess('Bestätigungs-E-Mail wurde erneut gesendet');
+      setSuccess('Verification email has been sent again');
     } catch (error: unknown) {
       if (error instanceof Error) {
-        console.error('Fehler beim Senden der E-Mail:', error.message);
-        setError('Fehler beim Senden der E-Mail');
+        console.error('Error sending email:', error.message);
+        setError('Error sending email');
       }
     }
   };
@@ -213,12 +213,12 @@ const ProfilePage: React.FC = () => {
 
       // Validate file type
       if (!file.type.startsWith('image/')) {
-        throw new Error('Bitte wähle eine Bilddatei aus');
+        throw new Error('Please select an image file');
       }
 
       // Validate file size (max 5MB)
       if (file.size > 5 * 1024 * 1024) {
-        throw new Error('Die Datei ist zu groß. Maximale Größe: 5MB');
+        throw new Error('File is too large. Maximum size: 5MB');
       }
 
       if (!user) return;
@@ -230,7 +230,7 @@ const ProfilePage: React.FC = () => {
           .remove([user.id]);
 
         if (deleteError) {
-          console.warn('Fehler beim Löschen des alten Profilbilds:', deleteError);
+          console.warn('Error deleting old profile picture:', deleteError);
           // Continue with upload even if delete fails
         }
       }
@@ -252,7 +252,7 @@ const ProfilePage: React.FC = () => {
         .createSignedUrl(user.id, 3600);
 
       if (!data?.signedUrl) {
-        throw new Error('Konnte keine signierte URL erstellen');
+        throw new Error('Could not create signed URL');
       }
 
       // Update profile with new avatar URL
@@ -266,11 +266,11 @@ const ProfilePage: React.FC = () => {
       }
 
       setProfile(prev => prev ? { ...prev, avatar_url: data.signedUrl } : null);
-      setSuccess('Profilbild erfolgreich aktualisiert');
+      setSuccess('Profile picture successfully updated');
     } catch (error: unknown) {
       if (error instanceof Error) {
-        console.error('Fehler beim Hochladen des Profilbilds:', error.message);
-        setError(error.message || 'Fehler beim Hochladen des Profilbilds');
+        console.error('Error uploading profile picture:', error.message);
+        setError(error.message || 'Error uploading profile picture');
       }
     } finally {
       setUploadingAvatar(false);
@@ -291,7 +291,7 @@ const ProfilePage: React.FC = () => {
       }
     } catch (error: unknown) {
       if (error instanceof Error) {
-        console.error('Fehler beim Aktualisieren der Avatar-URL:', error.message);
+        console.error('Error updating avatar URL:', error.message);
       }
     }
   };
@@ -316,12 +316,12 @@ const ProfilePage: React.FC = () => {
 
       // Basic client-side validation
       if (!currentPassword || !newPassword || !confirmPassword) {
-        setError('Bitte fülle alle Felder aus');
+        setError('Please fill in all fields');
         return;
       }
 
       if (newPassword !== confirmPassword) {
-        setError('Die Passwörter stimmen nicht überein');
+        setError('Passwords do not match');
         return;
       }
 
@@ -336,15 +336,15 @@ const ProfilePage: React.FC = () => {
         return;
       }
 
-      setSuccess('Passwort erfolgreich geändert');
+      setSuccess('Password successfully changed');
       setShowPasswordModal(false);
       setCurrentPassword('');
       setNewPassword('');
       setConfirmPassword('');
     } catch (error: unknown) {
       if (error instanceof Error) {
-        console.error('Fehler beim Ändern des Passworts:', error.message);
-        setError(error.message || 'Fehler beim Ändern des Passworts');
+        console.error('Error changing password:', error.message);
+        setError(error.message || 'Error changing password');
       }
     }
   };
@@ -356,12 +356,12 @@ const ProfilePage: React.FC = () => {
       setSuccess(null);
 
       if (deleteConfirmation !== 'DELETE') {
-        setError('Bitte gib "DELETE" ein, um dein Profil zu löschen');
+        setError('Please type "DELETE" to confirm');
         return;
       }
 
       if (!user) {
-        setError('Kein Benutzer gefunden');
+        setError('No user found');
         setShowDeleteModal(false);
         return;
       }
@@ -370,8 +370,8 @@ const ProfilePage: React.FC = () => {
       const { error: deleteError } = await supabase.rpc('delete_user');
       
       if (deleteError) {
-        console.error('Fehler beim Löschen des Accounts:', deleteError);
-        setError('Fehler beim Löschen des Accounts: ' + deleteError.message);
+        console.error('Error deleting account:', deleteError);
+        setError('Error deleting account: ' + deleteError.message);
         setShowDeleteModal(false);
         return;
       }
@@ -388,8 +388,8 @@ const ProfilePage: React.FC = () => {
       }, 5000);
     } catch (error: unknown) {
       if (error instanceof Error) {
-        console.error('Fehler beim Löschen des Profils:', error.message);
-        setError(error.message || 'Fehler beim Löschen des Profils');
+        console.error('Error deleting profile:', error.message);
+        setError(error.message || 'Error deleting profile');
       }
       setShowDeleteModal(false);
     }
@@ -408,7 +408,7 @@ const ProfilePage: React.FC = () => {
           <div className="flex justify-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
           </div>
-          <p className="text-center text-gray-600">Lade Profil...</p>
+          <p className="text-center text-gray-600">Loading profile...</p>
         </div>
       </div>
     );
@@ -420,13 +420,13 @@ const ProfilePage: React.FC = () => {
         <div className="max-w-md w-full space-y-8 bg-white p-8 rounded-xl shadow-md">
           <div className="text-center">
             <AlertCircle className="h-12 w-12 text-red-600 mx-auto" />
-            <h2 className="mt-2 text-xl font-bold text-gray-800">Kein Benutzer gefunden</h2>
-            <p className="mt-1 text-gray-600">Bitte melde dich an, um dein Profil anzuzeigen.</p>
+            <h2 className="mt-2 text-xl font-bold text-gray-800">No user found</h2>
+            <p className="mt-1 text-gray-600">Please sign in to view your profile.</p>
             <button
               className="mt-4 w-full py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
               onClick={() => navigate('/')}
             >
-              Zur Startseite
+              Go to Homepage
             </button>
           </div>
         </div>
@@ -443,7 +443,7 @@ const ProfilePage: React.FC = () => {
             <button
               onClick={handleSignOut}
               className="text-white hover:text-purple-200 transition-colors"
-              aria-label="Abmelden"
+              aria-label="Sign out"
             >
               <LogOut className="w-5 h-5" />
             </button>
@@ -507,7 +507,7 @@ const ProfilePage: React.FC = () => {
               <div className="w-full">
                 <div className="mb-4">
                   <label htmlFor="full-name" className="block text-sm font-medium text-gray-700 mb-1">
-                    Vollständiger Name
+                    Full Name
                   </label>
                   <input
                     type="text"
@@ -520,7 +520,7 @@ const ProfilePage: React.FC = () => {
                 
                 <div className="mb-4">
                   <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-1">
-                    Benutzername
+                    Username
                   </label>
                   <div className="relative">
                     <input
@@ -547,7 +547,7 @@ const ProfilePage: React.FC = () => {
                     className="flex-1 py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 flex items-center justify-center"
                   >
                     <Save className="w-4 h-4 mr-2" />
-                    Speichern
+                    Save
                   </button>
                   
                   <button
@@ -560,7 +560,7 @@ const ProfilePage: React.FC = () => {
                     }}
                     className="flex-1 py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
                   >
-                    Abbrechen
+                    Cancel
                   </button>
                 </div>
               </div>
@@ -585,7 +585,7 @@ const ProfilePage: React.FC = () => {
           <div className="border-t border-gray-200 pt-4">
             <div className="flex justify-between items-start mb-4">
               <div>
-                <p className="text-sm font-medium text-gray-700">E-Mail</p>
+                <p className="text-sm font-medium text-gray-700">Email</p>
                 <p className="text-gray-600">{user.email}</p>
               </div>
               
@@ -606,7 +606,7 @@ const ProfilePage: React.FC = () => {
                       className="text-xs text-purple-600 hover:text-purple-500 flex items-center"
                     >
                       <Mail className="w-3 h-3 mr-1" />
-                      Resend e-mail
+                      Resend email
                     </button>
                   </div>
                 )}
@@ -619,7 +619,7 @@ const ProfilePage: React.FC = () => {
                 className="w-full py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 flex items-center justify-center"
               >
                 <Lock className="w-4 h-4 mr-2" />
-                Passwort ändern
+                Change Password
               </button>
               
               <button
@@ -627,7 +627,7 @@ const ProfilePage: React.FC = () => {
                 className="w-full py-2 px-4 border border-red-300 rounded-md shadow-sm text-sm font-medium text-red-700 bg-white hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 flex items-center justify-center"
               >
                 <Trash2 className="w-4 h-4 mr-2" />
-                Profil löschen
+                Delete Profile
               </button>
             </div>
           </div>
@@ -639,7 +639,7 @@ const ProfilePage: React.FC = () => {
         <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-xl p-6 max-w-md w-full shadow-xl transform transition-all">
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-bold text-gray-900">Passwort ändern</h2>
+              <h2 className="text-xl font-bold text-gray-900">Change Password</h2>
               <button
                 onClick={() => setShowPasswordModal(false)}
                 className="text-gray-400 hover:text-gray-500 transition-colors"
@@ -665,7 +665,7 @@ const ProfilePage: React.FC = () => {
             <form onSubmit={handlePasswordChange} className="space-y-4">
               <div>
                 <label htmlFor="current-password" className="block text-sm font-medium text-gray-700 mb-1">
-                  Aktuelles Passwort
+                  Current Password
                 </label>
                 <input
                   type="password"
@@ -679,7 +679,7 @@ const ProfilePage: React.FC = () => {
               
               <div>
                 <label htmlFor="new-password" className="block text-sm font-medium text-gray-700 mb-1">
-                  Neues Passwort
+                  New Password
                 </label>
                 <input
                   type="password"
@@ -693,7 +693,7 @@ const ProfilePage: React.FC = () => {
               
               <div>
                 <label htmlFor="confirm-password" className="block text-sm font-medium text-gray-700 mb-1">
-                  Passwort bestätigen
+                  Confirm Password
                 </label>
                 <input
                   type="password"
@@ -710,7 +710,7 @@ const ProfilePage: React.FC = () => {
                   type="submit"
                   className="flex-1 py-2 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 transition-colors"
                 >
-                  Passwort ändern
+                  Change Password
                 </button>
                 <button
                   type="button"
@@ -724,7 +724,7 @@ const ProfilePage: React.FC = () => {
                   }}
                   className="flex-1 py-2 px-4 border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 transition-colors"
                 >
-                  Abbrechen
+                  Cancel
                 </button>
               </div>
             </form>
@@ -737,7 +737,7 @@ const ProfilePage: React.FC = () => {
         <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-xl p-6 max-w-md w-full shadow-xl transform transition-all">
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-bold text-red-600">Profil löschen</h2>
+              <h2 className="text-xl font-bold text-red-600">Delete Profile</h2>
               <button
                 onClick={() => setShowDeleteModal(false)}
                 className="text-gray-400 hover:text-gray-500 transition-colors"
@@ -746,11 +746,11 @@ const ProfilePage: React.FC = () => {
               </button>
             </div>
             <p className="text-gray-600 mb-4">
-              Bist du sicher, dass du dein Profil löschen möchtest? Diese Aktion kann nicht rückgängig gemacht werden.
+              Are you sure you want to delete your profile? This action cannot be undone.
             </p>
             <div className="mb-4">
               <label htmlFor="delete-confirmation" className="block text-sm font-medium text-gray-700 mb-1">
-                Bitte gib "DELETE" ein, um zu bestätigen
+                Please type "DELETE" to confirm
               </label>
               <input
                 type="text"
@@ -766,13 +766,13 @@ const ProfilePage: React.FC = () => {
                 onClick={handleProfileDeletion}
                 className="flex-1 py-2 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors"
               >
-                Profil löschen
+                Delete Profile
               </button>
               <button
                 onClick={() => setShowDeleteModal(false)}
                 className="flex-1 py-2 px-4 border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 transition-colors"
               >
-                Abbrechen
+                Cancel
               </button>
             </div>
           </div>
@@ -785,8 +785,8 @@ const ProfilePage: React.FC = () => {
           <div className="bg-white rounded-xl p-6 max-w-md w-full shadow-xl transform transition-all">
             <div className="flex flex-col items-center text-center">
               <CheckCircle className="w-16 h-16 text-green-500 mb-4" />
-              <h2 className="text-xl font-bold text-gray-900 mb-2">Profil erfolgreich gelöscht</h2>
-              <p className="text-gray-600">Du wirst in Kürze zur Startseite weitergeleitet...</p>
+              <h2 className="text-xl font-bold text-gray-900 mb-2">Profile successfully deleted</h2>
+              <p className="text-gray-600">You will be redirected to the homepage shortly...</p>
             </div>
           </div>
         </div>
