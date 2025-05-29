@@ -120,14 +120,14 @@ const Navbar: React.FC<NavbarProps> = ({ onLoginClick, onRegisterClick }) => {
                 className="flex items-center px-3 py-2 text-sm font-medium text-purple-700 border border-purple-300 rounded-xl hover:bg-purple-50 transition"
               >
                 <User className="h-4 w-4 mr-2" />
-                Profil
+                Profile
               </Link>
               <button 
                 onClick={handleSignOut} 
                 className="flex items-center px-3 py-2 text-sm font-medium text-gray-700 border border-gray-300 rounded-xl hover:bg-gray-50 transition"
               >
                 <LogOut className="h-4 w-4 mr-2" />
-                Abmelden
+                Log out
               </button>
             </div>
           ) : (
@@ -142,7 +142,7 @@ const Navbar: React.FC<NavbarProps> = ({ onLoginClick, onRegisterClick }) => {
                 onClick={onRegisterClick}
                 className="px-4 py-2 text-sm font-medium text-white bg-purple-600 rounded-xl hover:bg-purple-700 transition"
               >
-                Registrieren
+                Sign up
               </button>
             </>
           )}
@@ -228,14 +228,14 @@ const Navbar: React.FC<NavbarProps> = ({ onLoginClick, onRegisterClick }) => {
                   onClick={closeMobileMenu}
                 >
                   <User className="h-4 w-4 mr-2" />
-                  Profil
+                  Profile
                 </Link>
                 <button 
                   onClick={handleSignOut} 
                   className="flex items-center justify-center px-4 py-3 text-gray-700 border border-gray-300 rounded-xl hover:bg-gray-50 transition w-full"
                 >
                   <LogOut className="h-4 w-4 mr-2" />
-                  Abmelden
+                  Log out
                 </button>
               </>
             ) : (
@@ -256,7 +256,7 @@ const Navbar: React.FC<NavbarProps> = ({ onLoginClick, onRegisterClick }) => {
                   }}
                   className="px-4 py-3 text-center text-white bg-purple-600 rounded-xl hover:bg-purple-700 transition"
                 >
-                  Registrieren
+                  Sign up
                 </button>
               </>
             )}

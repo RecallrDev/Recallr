@@ -19,19 +19,30 @@ const AuthModal: React.FC<AuthModalProps> = ({
   const [isFlipped, setIsFlipped] = useState(initialView === 'register');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [name, setName] = useState('');
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
   const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
   const navigate = useNavigate();
   
   // Reset state when modal is closed or initialView changes
   useEffect(() => {
     if (isOpen) {
       setIsFlipped(initialView === 'register');
-      setEmail('');
+      // Lade gespeicherte E-Mail wenn vorhanden
+      const savedEmail = localStorage.getItem('rememberedEmail');
+      if (savedEmail) {
+        setEmail(savedEmail);
+        setRememberMe(true);
+      } else {
+        setEmail('');
+        setRememberMe(false);
+      }
       setPassword('');
+      setConfirmPassword('');
       setName('');
       setErrorMessage('');
       setSuccessMessage('');
@@ -43,6 +54,9 @@ const AuthModal: React.FC<AuthModalProps> = ({
     setIsFlipped(!isFlipped);
     setErrorMessage('');
     setSuccessMessage('');
+    // Reset password fields when switching views
+    setPassword('');
+    setConfirmPassword('');
   };
 
   // Handle sign in with Supabase
@@ -50,7 +64,7 @@ const AuthModal: React.FC<AuthModalProps> = ({
     e.preventDefault();
     
     if (!email || !password) {
-      setErrorMessage('Bitte gib deine E-Mail und dein Passwort ein');
+      setErrorMessage('Please enter your e-mail and password');
       return;
     }
     
@@ -68,6 +82,13 @@ const AuthModal: React.FC<AuthModalProps> = ({
       }
 
       if (data?.user) {
+        // E-Mail speichern oder entfernen basierend auf "Remember me"
+        if (rememberMe) {
+          localStorage.setItem('rememberedEmail', email);
+        } else {
+          localStorage.removeItem('rememberedEmail');
+        }
+        
         // Erfolgreich eingeloggt
         setSuccessMessage('Erfolgreich eingeloggt!');
         // Weiterleitung zur Profilseite nach kurzer Verzögerung
@@ -88,8 +109,18 @@ const AuthModal: React.FC<AuthModalProps> = ({
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!email || !password || !name) {
+    if (!email || !password || !confirmPassword || !name) {
       setErrorMessage('Bitte fülle alle Felder aus');
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      setErrorMessage('Die Passwörter stimmen nicht überein');
+      return;
+    }
+
+    if (password.length < 6) {
+      setErrorMessage('Das Passwort muss mindestens 6 Zeichen lang sein');
       return;
     }
     
@@ -114,26 +145,20 @@ const AuthModal: React.FC<AuthModalProps> = ({
       }
 
       if (authData?.user) {
-        // 2. Manuell ein Profil erstellen
-        try {
-          const { error: profileError } = await supabase
-            .from('profiles')
-            .insert({
-              id: authData.user.id,
-              full_name: name,
-              username: '', // Optional kannst du hier eine Standard-Username setzen
-              avatar_url: '',
-              updated_at: new Date().toISOString(),
-            });
-            
-          if (profileError) {
-            console.error('Fehler beim Erstellen des Profils:', profileError.message);
-            // Wir werfen hier keinen Fehler, da der Benutzer bereits erstellt wurde
-          }
-        } catch (profileCreateError) {
-          console.error('Unerwarteter Fehler beim Profil erstellen:', profileCreateError);
+        // Prüfen ob der Benutzer bereits existiert
+        // Wenn identities vorhanden sind, bedeutet das der Benutzer existiert bereits
+        if (authData.user.identities && authData.user.identities.length === 0) {
+          setErrorMessage('Ein Konto mit dieser E-Mail-Adresse existiert bereits. Bitte logge dich ein.');
+          return;
         }
-        
+
+        // Zusätzliche Prüfung: Wenn der Benutzer bereits bestätigt ist
+        if (authData.user.email_confirmed_at) {
+          setErrorMessage('Ein Konto mit dieser E-Mail-Adresse existiert bereits. Bitte logge dich ein.');
+          return;
+        }
+
+        // Das Profil wird automatisch durch den Database Trigger erstellt
         // Erfolgreich registriert
         setSuccessMessage('Registrierung erfolgreich! Bitte bestätige deine E-Mail-Adresse.');
       }
@@ -172,6 +197,19 @@ const AuthModal: React.FC<AuthModalProps> = ({
   return (
     <div 
       className="auth-modal-overlay"
+      style={{ 
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        display: 'flex',
+        alignItems: 'flex-start',
+        justifyContent: 'center',
+        paddingTop: '10vh',
+        zIndex: 50
+      }}
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
@@ -254,6 +292,8 @@ const AuthModal: React.FC<AuthModalProps> = ({
                       name="remember-me"
                       type="checkbox"
                       className="h-4 w-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
+                      checked={rememberMe}
+                      onChange={(e) => setRememberMe(e.target.checked)}
                     />
                     <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-700">
                       Remember me
@@ -266,7 +306,7 @@ const AuthModal: React.FC<AuthModalProps> = ({
                       onClick={openForgotPassword}
                       className="font-medium text-purple-600 hover:text-purple-500"
                     >
-                      Passwort vergessen?
+                      Forgot your password?
                     </button>
                   </div>
                 </div>
@@ -382,6 +422,32 @@ const AuthModal: React.FC<AuthModalProps> = ({
                     />
                   </div>
                 </div>
+
+                <div>
+                  <label htmlFor="confirm-password" className="block text-sm font-medium text-gray-700 mb-1">Confirm Password</label>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <Lock className="h-5 w-5 text-gray-400" />
+                    </div>
+                    <input
+                      type="password"
+                      id="confirm-password"
+                      className={`pl-10 w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-transparent transition ${
+                        confirmPassword && password !== confirmPassword 
+                          ? 'border-red-300 focus:ring-red-500' 
+                          : 'border-gray-300'
+                      }`}
+                      placeholder="••••••••"
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      required
+                      minLength={6}
+                    />
+                  </div>
+                  {confirmPassword && password !== confirmPassword && (
+                    <p className="mt-1 text-sm text-red-600">Die Passwörter stimmen nicht überein</p>
+                  )}
+                </div>
                 
                 <div className="flex items-center">
                   <input
@@ -405,8 +471,8 @@ const AuthModal: React.FC<AuthModalProps> = ({
                 
                 <button
                   type="submit"
-                  className="w-full py-3 px-4 border border-transparent rounded-xl shadow-sm text-sm font-medium text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 transition"
-                  disabled={loading}
+                  className="w-full py-3 px-4 border border-transparent rounded-xl shadow-sm text-sm font-medium text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 transition disabled:bg-gray-400 disabled:cursor-not-allowed"
+                  disabled={loading || (confirmPassword.length > 0 && password !== confirmPassword)}
                 >
                   {loading ? 'Erstelle Konto...' : 'Create account'}
                 </button>

@@ -176,7 +176,7 @@ const ProfilePage: React.FC = () => {
       <div className="max-w-md mx-auto bg-white rounded-xl shadow-md overflow-hidden">
         <div className="bg-purple-600 px-6 py-4">
           <div className="flex justify-between items-center">
-            <h1 className="text-xl font-bold text-white">Mein Profil</h1>
+            <h1 className="text-xl font-bold text-white">My profile</h1>
             <button
               onClick={handleSignOut}
               className="text-white hover:text-purple-200 transition-colors"
@@ -278,7 +278,7 @@ const ProfilePage: React.FC = () => {
                   className="mt-2 py-1 px-3 border border-gray-300 rounded-md shadow-sm text-xs font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 flex items-center"
                 >
                   <Edit className="w-3 h-3 mr-1" />
-                  Profil bearbeiten
+                  Edit profile
                 </button>
               </>
             )}
@@ -295,20 +295,20 @@ const ProfilePage: React.FC = () => {
                 {profile.email_verified ? (
                   <div className="flex items-center text-green-600">
                     <CheckCircle className="w-4 h-4 mr-1" />
-                    <span className="text-xs">Verifiziert</span>
+                    <span className="text-xs">Verified</span>
                   </div>
                 ) : (
                   <div className="flex flex-col items-end">
                     <div className="flex items-center text-amber-600 mb-1">
                       <AlertCircle className="w-4 h-4 mr-1" />
-                      <span className="text-xs">Nicht verifiziert</span>
+                      <span className="text-xs">Not verified</span>
                     </div>
                     <button
                       onClick={resendVerificationEmail}
                       className="text-xs text-purple-600 hover:text-purple-500 flex items-center"
                     >
                       <Mail className="w-3 h-3 mr-1" />
-                      E-Mail erneut senden
+                      Resend e-mail
                     </button>
                   </div>
                 )}
@@ -317,7 +317,7 @@ const ProfilePage: React.FC = () => {
             
             <div className="mt-6">
               <p className="text-sm text-gray-500">
-                Account erstellt am: {new Date(user.created_at || '').toLocaleDateString()}
+                Account created on: {new Date(user.created_at || '').toLocaleDateString()}
               </p>
             </div>
           </div>
