@@ -23,10 +23,10 @@ const TeamSection: React.FC = () => {
       initials: "SH"
     },
     {
-      name: "-",
-      role: "-",
-      bio: "Would you like to become part of our team? Write to us - we look forward to new ideas and support!",
-      initials: "--"
+      name: "Lorenz Rentenberger",
+      role: "Co-Founder & Fullstack Engineer",
+      bio: "CS student at UAS Technikum Vienna with a passion for software, data, and the web. I love building things with ♥ – always with a focus on simplicity, usability, and real-world value.",
+      initials: "LR"
     },
     {
       name: "-",
