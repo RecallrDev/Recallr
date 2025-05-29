@@ -1,7 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { HashLink } from 'react-router-hash-link';
-import { Menu, X } from 'lucide-react';
+import { Menu, X, User, LogOut } from 'lucide-react';
+import { useAuth } from './AuthContext';
+
+interface NavbarProps {
+  onLoginClick: () => void;
+  onRegisterClick: () => void;
+}
 
 const scrollWithOffset = (el: HTMLElement) => {
   const yCoordinate = el.getBoundingClientRect().top + window.pageYOffset;
@@ -9,11 +15,13 @@ const scrollWithOffset = (el: HTMLElement) => {
   window.scrollTo({ top: yCoordinate + yOffset, behavior: 'smooth'});
 }
 
-const Navbar: React.FC = () => {
+const Navbar: React.FC<NavbarProps> = ({ onLoginClick, onRegisterClick }) => {
   // State to track if we've scrolled past a certain threshold
   const [scrolled, setScrolled] = useState(false);
   // State to control mobile menu
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { user, signOut } = useAuth();
+  const navigate = useNavigate();
 
   // Setup scroll event listener
   useEffect(() => {
@@ -41,6 +49,12 @@ const Navbar: React.FC = () => {
   // Close mobile menu after clicking a link
   const closeMobileMenu = () => {
     setMobileMenuOpen(false);
+  };
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate('/');
+    closeMobileMenu();
   };
 
   return (
@@ -92,18 +106,39 @@ const Navbar: React.FC = () => {
 
         {/* Auth Buttons - Desktop */}
         <div className="hidden md:flex items-center space-x-3">
-          <Link
-            to="/login"
-            className="px-4 py-2 text-sm font-medium text-purple-600 border border-purple-600 rounded-xl hover:bg-purple-50 transition"
-          >
-            Login
-          </Link>
-          <Link
-            to="/register"
-            className="px-4 py-2 text-sm font-medium text-white bg-purple-600 rounded-xl hover:bg-purple-700 transition"
-          >
-            Register
-          </Link>
+          {user ? (
+            <div className="flex items-center space-x-4">
+              <Link 
+                to="/profile" 
+                className="flex items-center px-3 py-2 text-sm font-medium text-purple-700 border border-purple-300 rounded-xl hover:bg-purple-50 transition"
+              >
+                <User className="h-4 w-4 mr-2" />
+                Profile
+              </Link>
+              <button 
+                onClick={handleSignOut} 
+                className="flex items-center px-3 py-2 text-sm font-medium text-gray-700 border border-gray-300 rounded-xl hover:bg-gray-50 transition"
+              >
+                <LogOut className="h-4 w-4 mr-2" />
+                Log out
+              </button>
+            </div>
+          ) : (
+            <>
+              <button
+                onClick={onLoginClick}
+                className="px-4 py-2 text-sm font-medium text-purple-600 border border-purple-600 rounded-xl hover:bg-purple-50 transition"
+              >
+                Login
+              </button>
+              <button
+                onClick={onRegisterClick}
+                className="px-4 py-2 text-sm font-medium text-white bg-purple-600 rounded-xl hover:bg-purple-700 transition"
+              >
+                Sign up
+              </button>
+            </>
+          )}
         </div>
 
         {/* Mobile Menu Button */}
@@ -178,20 +213,46 @@ const Navbar: React.FC = () => {
           
           {/* Auth Buttons */}
           <div className="flex flex-col space-y-2 pt-2">
-            <Link
-              to="/login"
-              className="px-4 py-3 text-center text-purple-600 border border-purple-600 rounded-xl hover:bg-purple-50 transition"
-              onClick={closeMobileMenu}
-            >
-              Login
-            </Link>
-            <Link
-              to="/register"
-              className="px-4 py-3 text-center text-white bg-purple-600 rounded-xl hover:bg-purple-700 transition"
-              onClick={closeMobileMenu}
-            >
-              Register
-            </Link>
+            {user ? (
+              <>
+                <Link 
+                  to="/profile" 
+                  className="flex items-center justify-center px-4 py-3 text-purple-700 border border-purple-300 rounded-xl hover:bg-purple-50 transition"
+                  onClick={closeMobileMenu}
+                >
+                  <User className="h-4 w-4 mr-2" />
+                  Profile
+                </Link>
+                <button 
+                  onClick={handleSignOut} 
+                  className="flex items-center justify-center px-4 py-3 text-gray-700 border border-gray-300 rounded-xl hover:bg-gray-50 transition w-full"
+                >
+                  <LogOut className="h-4 w-4 mr-2" />
+                  Log out
+                </button>
+              </>
+            ) : (
+              <>
+                <button
+                  onClick={() => {
+                    onLoginClick();
+                    closeMobileMenu();
+                  }}
+                  className="px-4 py-3 text-center text-purple-600 border border-purple-600 rounded-xl hover:bg-purple-50 transition"
+                >
+                  Login
+                </button>
+                <button
+                  onClick={() => {
+                    onRegisterClick();
+                    closeMobileMenu();
+                  }}
+                  className="px-4 py-3 text-center text-white bg-purple-600 rounded-xl hover:bg-purple-700 transition"
+                >
+                  Sign up
+                </button>
+              </>
+            )}
           </div>
         </div>
       </div>
