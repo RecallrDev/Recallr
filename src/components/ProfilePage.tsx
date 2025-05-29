@@ -31,6 +31,8 @@ const ProfilePage: React.FC = () => {
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [deleteConfirmation, setDeleteConfirmation] = useState('');
+  const [isCheckingUsername, setIsCheckingUsername] = useState(false);
+  const [usernameError, setUsernameError] = useState<string | null>(null);
 
   // Prüfen, ob der Benutzer angemeldet ist
   useEffect(() => {
@@ -82,6 +84,54 @@ const ProfilePage: React.FC = () => {
     getProfile();
   }, [user]);
 
+  // Username validation
+  const checkUsername = async (newUsername: string) => {
+    if (!newUsername) {
+      setUsernameError(null);
+      return;
+    }
+
+    if (newUsername === profile?.username) {
+      setUsernameError(null);
+      return;
+    }
+
+    try {
+      setIsCheckingUsername(true);
+      setUsernameError(null);
+
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('username')
+        .eq('username', newUsername)
+        .single();
+
+      if (error && error.code !== 'PGRST116') { // PGRST116 is the error code for no rows returned
+        throw error;
+      }
+
+      if (data) {
+        setUsernameError('Dieser Benutzername ist bereits vergeben');
+      }
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        console.error('Fehler bei der Benutzernamen-Validierung:', error.message);
+        setUsernameError('Fehler bei der Benutzernamen-Validierung');
+      }
+    } finally {
+      setIsCheckingUsername(false);
+    }
+  };
+
+  // Update username with debounce
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      checkUsername(username);
+    }, 500); // 500ms debounce
+
+    return () => clearTimeout(timeoutId);
+  }, [username]);
+
   // Profil aktualisieren
   const updateProfile = async () => {
     try {
@@ -89,6 +139,11 @@ const ProfilePage: React.FC = () => {
       setSuccess(null);
       
       if (!user) return;
+
+      if (usernameError) {
+        setError('Bitte wähle einen anderen Benutzernamen');
+        return;
+      }
       
       const updates = {
         id: user.id,
@@ -97,7 +152,6 @@ const ProfilePage: React.FC = () => {
         updated_at: new Date().toISOString(),
       };
 
-      // Die 'returning' Option wurde entfernt, da sie in deiner Supabase-Version nicht unterstützt wird
       const { error } = await supabase
         .from('profiles')
         .upsert(updates);
@@ -468,13 +522,23 @@ const ProfilePage: React.FC = () => {
                   <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-1">
                     Benutzername
                   </label>
-                  <input
-                    type="text"
-                    id="username"
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-transparent transition"
-                  />
+                  <div className="relative">
+                    <input
+                      type="text"
+                      id="username"
+                      value={username}
+                      onChange={(e) => setUsername(e.target.value)}
+                      className={`w-full px-4 py-2 border ${usernameError ? 'border-red-300' : 'border-gray-300'} rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-transparent transition`}
+                    />
+                    {isCheckingUsername && (
+                      <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-purple-600"></div>
+                      </div>
+                    )}
+                  </div>
+                  {usernameError && (
+                    <p className="mt-1 text-sm text-red-600">{usernameError}</p>
+                  )}
                 </div>
                 
                 <div className="flex space-x-2">
