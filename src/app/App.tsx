@@ -6,6 +6,8 @@ import ProfilePage from './routes/ProfilePage';
 import AuthCallback from '../features/authentification/AuthCallback';
 import ResetPasswordPage from '../features/profile_management/ResetPasswordPage';
 import HomePage from './routes/HomePage';
+import ResetPasswordPage from '../features/authentification/ResetPasswordPage';
+import StudyPage from './routes/StudyPage';
 import AuthModal from '../features/authentification/AuthModal';
 import { AuthProvider } from '../features/authentification/AuthContext';
 import ProtectedRoute from '../features/authentification/ProtectedRoute';

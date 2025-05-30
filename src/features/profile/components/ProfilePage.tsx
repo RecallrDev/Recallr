@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../../features/authentification/AuthContext';
-import { useProfile } from '../../features/profile/hooks/useProfile';
-import { ProfileAvatar } from '../../features/profile/components/ProfileAvatar';
-import { ProfileForm } from '../../features/profile/components/ProfileForm';
-import { PasswordChangeModal } from '../../features/profile/components/PasswordChangeModal';
-import { DeleteProfileModal } from '../../features/profile/components/DeleteProfileModal';
+import { useAuth } from '../../../features/authentification/AuthContext';
+import { useProfile } from '../hooks/useProfile';
+import { ProfileAvatar } from './ProfileAvatar';
+import { ProfileForm } from './ProfileForm';
+import { PasswordChangeModal } from './PasswordChangeModal';
+import { DeleteProfileModal } from './DeleteProfileModal';
 import { CheckCircle, AlertCircle, Mail, Lock, Trash2, LogOut } from 'lucide-react';
 
-const ProfilePage: React.FC = () => {
+export const ProfilePage: React.FC = () => {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
   const {
@@ -33,13 +33,6 @@ const ProfilePage: React.FC = () => {
       navigate('/');
     }
   }, [user, navigate]);
-
-  // Close password modal on successful password change
-  useEffect(() => {
-    if (success === 'Password successfully changed') {
-      setShowPasswordModal(false);
-    }
-  }, [success]);
 
   // Handle profile deletion success
   useEffect(() => {
@@ -139,7 +132,7 @@ const ProfilePage: React.FC = () => {
               </div>
               
               <div className="flex items-center">
-                {user?.email_confirmed_at ? (
+                {profile.email_verified ? (
                   <div className="flex items-center text-green-600">
                     <CheckCircle className="w-4 h-4 mr-1" />
                     <span className="text-xs">Verified</span>
@@ -212,6 +205,4 @@ const ProfilePage: React.FC = () => {
       )}
     </div>
   );
-};
-
-export default ProfilePage; 
+}; 
