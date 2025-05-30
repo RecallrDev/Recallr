@@ -1,0 +1,26 @@
+name: Deploy to Development
+
+on:
+  push:
+    branches: [ develop ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Deploy to server
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: ${{ secrets.SSH_HOST }}
+        username: ${{ secrets.SSH_USER }}
+        key: ${{ secrets.SSH_PRIVATE_KEY }}
+        script: |
+          cd ~/apps/recallr
+          git pull origin develop
+          docker compose -f docker-compose.dev.yml down
+          docker compose -f docker-compose.dev.yml up -d --build
+          echo "✅ Deployment successful!"

@@ -1,0 +1,49 @@
+services:
+  backend:
+    build: ./backend
+    container_name: recallr-backend-dev
+    restart: unless-stopped
+    environment:
+      - ENVIRONMENT=development
+    ports:
+      - "8000:8000"
+    networks:
+      - recallr-network
+
+  frontend:
+    image: node:20-alpine
+    container_name: recallr-frontend-dev
+    working_dir: /app
+    volumes:
+      - .:/app
+      - node_modules:/app/node_modules
+    ports:
+      - "5173:5173"
+    command: sh -c "npm install && npm run dev -- --host 0.0.0.0"
+    depends_on:
+      - backend
+    networks:
+      - recallr-network
+
+  nginx:
+    image: nginx:alpine
+    container_name: recallr-nginx-dev
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/dev-ssl.conf:/etc/nginx/nginx.conf
+      - /etc/letsencrypt:/etc/letsencrypt:ro
+    depends_on:
+      - frontend
+      - backend
+    networks:
+      - recallr-network
+
+networks:
+  recallr-network:
+    driver: bridge
+
+volumes:
+  node_modules:
