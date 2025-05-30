@@ -157,13 +157,15 @@ const CreateDeck: React.FC<CreateDeckProps> = ({
           <button
             onClick={handleCreateDeck}
             disabled={!deckName.trim()}
-            className="bg-purple-600 text-white px-6 py-2 rounded-lg hover:bg-purple-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+            className="text-white px-6 py-2 rounded-lg hover:bg-purple-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+            style={{ backgroundColor: color }}
           >
             Create Deck
           </button>
           <button
             onClick={onCancel}
-            className="bg-white text-purple-600 px-6 py-2 rounded-lg border border-purple-600 hover:bg-purple-50 transition-colors font-medium"
+            className="bg-white px-6 py-2 rounded-lg border hover:bg-purple-50 transition-colors font-medium"
+            style={{ borderColor: color, color: color }}
           >
             Cancel
           </button>

@@ -1,4 +1,4 @@
-import type { BasicCard } from '../../types/Card';
+import type { BasicCard } from '../../../types/Card';
 
 const BasicCardStudyView: React.FC<{
   card: BasicCard;
