@@ -4,7 +4,6 @@ import Navbar from '../components/navigation/Navbar';
 import Footer from '../components/navigation/Footer';
 import ProfilePage from './routes/ProfilePage';
 import AuthCallback from '../features/authentification/AuthCallback';
-import ResetPasswordPage from '../features/profile_management/ResetPasswordPage';
 import HomePage from './routes/HomePage';
 import ResetPasswordPage from '../features/authentification/ResetPasswordPage';
 import StudyPage from './routes/StudyPage';
@@ -16,7 +15,6 @@ import DeckListPage from './routes/DeckListPage';
 import CreateDeckPage from './routes/CreateDeckPage';
 import EditDeckPage from './routes/EditDeckPage';
 import CreateCardPage from './routes/CreateCardPage';
-import StudyPage from './routes/StudyPage';
 
 import '../index.css';
 
