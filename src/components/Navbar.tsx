@@ -76,7 +76,7 @@ const Navbar: React.FC<NavbarProps> = ({ onLoginClick, onRegisterClick }) => {
           <div className="bg-purple-600 text-white rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold">
             R
           </div>
-          <span className="text-purple-600 font-semibold text-lg">Recallr</span>
+          <span className="text-purple-600 font-semibold text-lg">Recallrr</span>
         </HashLink>
 
         {/* Desktop Navigation Links */}
