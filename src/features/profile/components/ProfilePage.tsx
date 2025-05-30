@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../../features/authentification/AuthContext';
-import { useProfile } from '../../features/profile/hooks/useProfile';
-import { ProfileAvatar } from '../../features/profile/components/ProfileAvatar';
-import { ProfileForm } from '../../features/profile/components/ProfileForm';
-import { PasswordChangeModal } from '../../features/profile/components/PasswordChangeModal';
-import { DeleteProfileModal } from '../../features/profile/components/DeleteProfileModal';
+import { useAuth } from '../../../features/authentification/AuthContext';
+import { useProfile } from '../hooks/useProfile';
+import { ProfileAvatar } from './ProfileAvatar';
+import { ProfileForm } from './ProfileForm';
+import { PasswordChangeModal } from './PasswordChangeModal';
+import { DeleteProfileModal } from './DeleteProfileModal';
 import { CheckCircle, AlertCircle, Mail, Lock, Trash2, LogOut } from 'lucide-react';
 
 export const ProfilePage: React.FC = () => {
