@@ -4,6 +4,7 @@ import { supabase } from '../../lib/supabase_client';
 import { useNavigate } from 'react-router-dom';
 import SocialLoginButtons from './SocialLoginButtons';
 import ForgotPasswordModal from './ForgotPasswordModal';
+import { config } from '../../lib/config';
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -64,7 +65,7 @@ const AuthModal: React.FC<AuthModalProps> = ({
     e.preventDefault();
     
     if (!email || !password) {
-      setErrorMessage('Please enter your e-mail and password');
+      setErrorMessage('Please enter your email and password');
       return;
     }
     
@@ -90,16 +91,27 @@ const AuthModal: React.FC<AuthModalProps> = ({
         }
         
         // Erfolgreich eingeloggt
-        setSuccessMessage('Erfolgreich eingeloggt!');
+        setSuccessMessage('Successfully logged in!');
         // Weiterleitung zur Profilseite nach kurzer Verzögerung
         setTimeout(() => {
           onClose();
-          navigate('/profile');
+          navigate(config.redirectUrls.profile);
         }, 1000);
       }
     } catch (error: any) {
-      console.error('Fehler beim Einloggen:', error);
-      setErrorMessage(error.message || 'Fehler beim Einloggen');
+      console.error('Login error:', error);
+      
+      // Bessere Fehlerbehandlung
+      let errorMsg = 'Login error';
+      if (error.message.includes('Invalid login credentials')) {
+        errorMsg = 'Invalid email or password';
+      } else if (error.message.includes('Email not confirmed')) {
+        errorMsg = 'Please confirm your email address first';
+      } else if (error.message) {
+        errorMsg = error.message;
+      }
+      
+      setErrorMessage(errorMsg);
     } finally {
       setLoading(false);
     }
@@ -110,17 +122,17 @@ const AuthModal: React.FC<AuthModalProps> = ({
     e.preventDefault();
     
     if (!email || !password || !confirmPassword || !name) {
-      setErrorMessage('Bitte fülle alle Felder aus');
+      setErrorMessage('Please fill in all fields');
       return;
     }
 
     if (password !== confirmPassword) {
-      setErrorMessage('Die Passwörter stimmen nicht überein');
+      setErrorMessage('Passwords do not match');
       return;
     }
 
     if (password.length < 6) {
-      setErrorMessage('Das Passwort muss mindestens 6 Zeichen lang sein');
+      setErrorMessage('Password must be at least 6 characters long');
       return;
     }
     
@@ -136,7 +148,7 @@ const AuthModal: React.FC<AuthModalProps> = ({
           data: {
             full_name: name,
           },
-          emailRedirectTo: `${window.location.origin}/auth/callback`,
+          emailRedirectTo: config.redirectUrls.authCallback,
         },
       });
 
@@ -146,25 +158,32 @@ const AuthModal: React.FC<AuthModalProps> = ({
 
       if (authData?.user) {
         // Prüfen ob der Benutzer bereits existiert
-        // Wenn identities vorhanden sind, bedeutet das der Benutzer existiert bereits
         if (authData.user.identities && authData.user.identities.length === 0) {
-          setErrorMessage('Ein Konto mit dieser E-Mail-Adresse existiert bereits. Bitte logge dich ein.');
+          setErrorMessage('An account with this email address already exists. Please log in.');
           return;
         }
 
         // Zusätzliche Prüfung: Wenn der Benutzer bereits bestätigt ist
         if (authData.user.email_confirmed_at) {
-          setErrorMessage('Ein Konto mit dieser E-Mail-Adresse existiert bereits. Bitte logge dich ein.');
+          setErrorMessage('An account with this email address already exists. Please log in.');
           return;
         }
 
-        // Das Profil wird automatisch durch den Database Trigger erstellt
         // Erfolgreich registriert
-        setSuccessMessage('Registrierung erfolgreich! Bitte bestätige deine E-Mail-Adresse.');
+        setSuccessMessage('Registration successful! Please confirm your email address.');
       }
     } catch (error: any) {
-      console.error('Fehler bei der Registrierung:', error.message);
-      setErrorMessage(error.message || 'Fehler bei der Registrierung');
+      console.error('Registration error:', error.message);
+      
+      // Bessere Fehlerbehandlung
+      let errorMsg = 'Registration error';
+      if (error.message.includes('User already registered')) {
+        errorMsg = 'An account with this email already exists. Please log in.';
+      } else if (error.message) {
+        errorMsg = error.message;
+      }
+      
+      setErrorMessage(errorMsg);
     } finally {
       setLoading(false);
     }
@@ -311,7 +330,7 @@ const AuthModal: React.FC<AuthModalProps> = ({
                   className="w-full py-3 px-4 border border-transparent rounded-xl shadow-sm text-sm font-medium text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 transition"
                   disabled={loading}
                 >
-                  {loading ? 'Wird eingeloggt...' : 'Sign in'}
+                  {loading ? 'Signing in...' : 'Sign in'}
                 </button>
               </form>
               
@@ -440,7 +459,7 @@ const AuthModal: React.FC<AuthModalProps> = ({
                     />
                   </div>
                   {confirmPassword && password !== confirmPassword && (
-                    <p className="mt-1 text-sm text-red-600">Die Passwörter stimmen nicht überein</p>
+                    <p className="mt-1 text-sm text-red-600">Passwords do not match</p>
                   )}
                 </div>
                 
@@ -469,7 +488,7 @@ const AuthModal: React.FC<AuthModalProps> = ({
                   className="w-full py-3 px-4 border border-transparent rounded-xl shadow-sm text-sm font-medium text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 transition disabled:bg-gray-400 disabled:cursor-not-allowed"
                   disabled={loading || (confirmPassword.length > 0 && password !== confirmPassword)}
                 >
-                  {loading ? 'Erstelle Konto...' : 'Create account'}
+                  {loading ? 'Creating account...' : 'Create account'}
                 </button>
               </form>
               

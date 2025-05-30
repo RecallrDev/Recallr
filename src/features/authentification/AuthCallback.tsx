@@ -2,12 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../lib/supabase_client';
 import { CheckCircle, AlertCircle } from 'lucide-react';
+import { config } from '../../lib/config';
 
 const AuthCallback: React.FC = () => {
   const navigate = useNavigate();
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const [message, setMessage] = useState('Authentifizierung wird verarbeitet...');
+  const [message, setMessage] = useState('Processing authentication...');
 
   useEffect(() => {
     const handleAuthCallback = async () => {
@@ -37,7 +38,7 @@ const AuthCallback: React.FC = () => {
               const fullName = userMetadata.full_name || 
                                userMetadata.name || 
                                userMetadata.user_name || 
-                               'Benutzer';
+                               'User';
                                
               const { error: insertError } = await supabase
                 .from('profiles')
@@ -50,12 +51,12 @@ const AuthCallback: React.FC = () => {
                 });
                 
               if (insertError) {
-                console.warn('Error when creating the profile:', insertError);
+                console.warn('Error creating profile:', insertError);
                 // Nicht kritisch, weitermachen
               }
             }
           } catch (profileCheckError) {
-            console.warn('Error when checking the profile:', profileCheckError);
+            console.warn('Error checking profile:', profileCheckError);
             // Nicht kritisch, weitermachen
           }
           
@@ -63,23 +64,34 @@ const AuthCallback: React.FC = () => {
           
           // Nach kurzer Verzögerung zur Profilseite weiterleiten
           setTimeout(() => {
-            navigate('/profile');
+            navigate(config.redirectUrls.profile);
           }, 1500);
         } else {
           // Wenn keine Session vorhanden ist, zur Startseite weiterleiten
           setMessage('No active session found.');
           setTimeout(() => {
-            navigate('/');
+            navigate(config.redirectUrls.home);
           }, 1500);
         }
       } catch (error: any) {
         console.error('Error in auth callback:', error);
-        setError(error.message || 'An error has occurred.');
+        
+        // Bessere Fehlerbehandlung
+        let errorMsg = 'An error occurred during authentication.';
+        if (error.message.includes('Email link is invalid')) {
+          errorMsg = 'The email link has expired or is invalid. Please try signing in again.';
+        } else if (error.message.includes('Token has expired')) {
+          errorMsg = 'The authentication token has expired. Please try signing in again.';
+        } else if (error.message) {
+          errorMsg = error.message;
+        }
+        
+        setError(errorMsg);
         
         // Bei Fehler nach kurzer Verzögerung zur Startseite weiterleiten
         setTimeout(() => {
-          navigate('/');
-        }, 2000);
+          navigate(config.redirectUrls.home);
+        }, 3000);
       } finally {
         setLoading(false);
       }
@@ -95,14 +107,14 @@ const AuthCallback: React.FC = () => {
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto"></div>
             <h2 className="mt-6 text-xl font-bold text-gray-800">{message}</h2>
-            <p className="mt-2 text-gray-600">Please wait, you will be forwarded shortly.</p>
+            <p className="mt-2 text-gray-600">Please wait, you will be redirected shortly.</p>
           </div>
         ) : error ? (
           <div className="text-center">
             <AlertCircle className="h-12 w-12 text-red-600 mx-auto" />
             <h2 className="mt-2 text-xl font-bold text-gray-800">Authentication error</h2>
             <p className="mt-2 text-red-600">{error}</p>
-            <p className="mt-2 text-gray-600">You will be redirected to the start page...</p>
+            <p className="mt-2 text-gray-600">You will be redirected to the home page...</p>
           </div>
         ) : (
           <div className="text-center">
