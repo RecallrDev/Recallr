@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { X, Mail, Lock, UserPlus, LogIn, User } from 'lucide-react';
 import { supabase } from '../../lib/supabase_client';
 import { useNavigate } from 'react-router-dom';
-import SocialLoginButtons from '../../features/profile_management/SocialLoginButtons';
-import ForgotPasswordModal from '../../features/profile_management/ForgotPasswordModal';
+import SocialLoginButtons from './SocialLoginButtons';
+import ForgotPasswordModal from './ForgotPasswordModal';
 
 interface AuthModalProps {
   isOpen: boolean;
