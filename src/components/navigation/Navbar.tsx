@@ -65,113 +65,119 @@ const Navbar: React.FC<NavbarProps> = ({ onLoginClick, onRegisterClick }) => {
           : 'bg-white shadow-sm'
       }`}
     >
-      <div className="container mx-auto px-4 py-3 flex items-center justify-between">
-        
-        {/* Logo/Brand */}
-        <HashLink
-          to="/#"
-          smooth
-          className="flex items-center space-x-2"
-        >
-          <div className="bg-purple-600 text-white rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold">
-            R
+      <div className="container mx-auto px-4 py-3">
+        <div className="grid grid-cols-3 items-center">
+          {/* Logo/Brand - Left */}
+          <div className="flex justify-start">
+            <HashLink
+              to="/#"
+              smooth
+              className="flex items-center space-x-2"
+            >
+              <div className="bg-purple-600 text-white rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold">
+                R
+              </div>
+              <span className="text-purple-600 font-semibold text-lg">Recallr</span>
+            </HashLink>
           </div>
-          <span className="text-purple-600 font-semibold text-lg">Recallr</span>
-        </HashLink>
 
-        {/* Desktop Navigation Links */}
-        <div className="hidden md:flex items-center space-x-6 text-sm text-gray-700">
-          <HashLink 
-            to="/#about" 
-            className="hover:text-purple-600 transition"
-            smooth
-          >
-            About
-          </HashLink>
-          <HashLink 
-            to="/#team" 
-            className="hover:text-purple-600 transition"
-            smooth
-          >
-            Team
-          </HashLink>
-          <HashLink 
-            to="/#contact" 
-            className="hover:text-purple-600 transition"
-            smooth
-          >
-            Contact
-          </HashLink>
-        </div>
+          {/* Desktop Navigation Links - Center */}
+          <div className="hidden md:flex items-center justify-center space-x-6 text-sm text-gray-700">
+            <HashLink 
+              to="/#about" 
+              className="hover:text-purple-600 transition"
+              smooth
+            >
+              About
+            </HashLink>
+            <HashLink 
+              to="/#team" 
+              className="hover:text-purple-600 transition"
+              smooth
+            >
+              Team
+            </HashLink>
+            <HashLink 
+              to="/#contact" 
+              className="hover:text-purple-600 transition"
+              smooth
+            >
+              Contact
+            </HashLink>
+          </div>
 
-        {/* Auth Buttons - Desktop */}
-        <div className="hidden md:flex items-center space-x-3">
-          {user ? (
-            <div className="flex items-center space-x-4">
-              <Link 
-                to="/study" 
-                className="flex items-center px-3 py-2 text-sm font-medium bg-purple-600 text-white border border-purple-300 rounded-xl hover:bg-purple-700 transition"
-              >
-                <Book className="h-4 w-4 mr-2" />
-                Study
-              </Link>
-              <Link 
-                to="/profile" 
-                className="flex items-center px-3 py-2 text-sm font-medium text-purple-700 border border-purple-300 rounded-xl hover:bg-purple-50 transition"
-              >
-                <User className="h-4 w-4 mr-2" />
-                Profile
-              </Link>
-              <button 
-                onClick={handleSignOut} 
-                className="flex items-center px-3 py-2 text-sm font-medium text-gray-700 border border-gray-300 rounded-xl hover:bg-gray-50 transition"
-              >
-                <LogOut className="h-4 w-4 mr-2" />
-                Log out
-              </button>
+          {/* Auth Buttons - Right */}
+          <div className="flex items-center justify-end space-x-3">
+            {/* Desktop Auth Buttons */}
+            <div className="hidden md:flex items-center space-x-3">
+              {user ? (
+                <>
+                  <Link 
+                    to="/study" 
+                    className="flex items-center px-3 py-2 text-sm font-medium bg-purple-600 text-white border border-purple-300 rounded-xl hover:bg-purple-700 transition"
+                  >
+                    <Book className="h-4 w-4 mr-2" />
+                    Study
+                  </Link>
+                  <Link 
+                    to="/profile" 
+                    className="flex items-center px-3 py-2 text-sm font-medium text-purple-700 border border-purple-300 rounded-xl hover:bg-purple-50 transition"
+                  >
+                    <User className="h-4 w-4 mr-2" />
+                    Profile
+                  </Link>
+                  <button 
+                    onClick={handleSignOut} 
+                    className="flex items-center px-3 py-2 text-sm font-medium text-gray-700 border border-gray-300 rounded-xl hover:bg-gray-50 transition"
+                  >
+                    <LogOut className="h-4 w-4 mr-2" />
+                    Log out
+                  </button>
+                </>
+              ) : (
+                <>
+                  <button
+                    onClick={onLoginClick}
+                    className="px-4 py-2 text-sm font-medium text-purple-600 border border-purple-600 rounded-xl hover:bg-purple-50 transition"
+                  >
+                    Login
+                  </button>
+                  <button
+                    onClick={onRegisterClick}
+                    className="px-4 py-2 text-sm font-medium text-white bg-purple-600 rounded-xl hover:bg-purple-700 transition"
+                  >
+                    Sign up
+                  </button>
+                </>
+              )}
             </div>
-          ) : (
-            <>
-              <button
-                onClick={onLoginClick}
-                className="px-4 py-2 text-sm font-medium text-purple-600 border border-purple-600 rounded-xl hover:bg-purple-50 transition"
-              >
-                Login
-              </button>
-              <button
-                onClick={onRegisterClick}
-                className="px-4 py-2 text-sm font-medium text-white bg-purple-600 rounded-xl hover:bg-purple-700 transition"
-              >
-                Sign up
-              </button>
-            </>
-          )}
-        </div>
 
-        {/* Mobile Menu Button */}
-        <button 
-          className="md:hidden text-gray-700 focus:outline-none burger-button"
-          onClick={toggleMobileMenu}
-          aria-label="Toggle mobile menu"
-        >
-          <div className="relative w-6 h-6">
-            <span 
-              className={`absolute block w-6 h-0.5 bg-gray-700 transform transition-all duration-300 ease-in-out ${
-                mobileMenuOpen ? 'rotate-45 top-3' : 'top-1.5'
-              }`}
-            ></span>
-            <span 
-              className={`absolute block w-6 h-0.5 bg-gray-700 top-3 transition-all duration-1000 ${
-                mobileMenuOpen ? 'opacity-0' : 'opacity-100'
-              }`}
-            ></span>
-            <span 
-              className={`absolute block w-6 h-0.5 bg-gray-700 transform transition-all duration-300 ease-in-out ${
-                mobileMenuOpen ? '-rotate-45 top-3' : 'top-4.5'
-              }`}
-            ></span>
+            {/* Mobile Menu Button */}
+            <button 
+              className="md:hidden text-gray-700 focus:outline-none burger-button"
+              onClick={toggleMobileMenu}
+              aria-label="Toggle mobile menu"
+            >
+              <div className="relative w-6 h-6">
+                <span 
+                  className={`absolute block w-6 h-0.5 bg-gray-700 transform transition-all duration-300 ease-in-out ${
+                    mobileMenuOpen ? 'rotate-45 top-3' : 'top-1.5'
+                  }`}
+                ></span>
+                <span 
+                  className={`absolute block w-6 h-0.5 bg-gray-700 top-3 transition-all duration-1000 ${
+                    mobileMenuOpen ? 'opacity-0' : 'opacity-100'
+                  }`}
+                ></span>
+                <span 
+                  className={`absolute block w-6 h-0.5 bg-gray-700 transform transition-all duration-300 ease-in-out ${
+                    mobileMenuOpen ? '-rotate-45 top-3' : 'top-4.5'
+                  }`}
+                ></span>
+              </div>
+            </button>
           </div>
-        </button>
+        </div>
       </div>
 
       {/* Mobile Menu Dropdown */}
@@ -222,6 +228,14 @@ const Navbar: React.FC<NavbarProps> = ({ onLoginClick, onRegisterClick }) => {
           <div className="flex flex-col space-y-2 pt-2">
             {user ? (
               <>
+                <Link 
+                  to="/study" 
+                  className="flex items-center justify-center px-4 py-3 font-medium text-white border border-purple-600 rounded-xl bg-purple-600 hover:bg-purple-700 transition"
+                  onClick={closeMobileMenu}
+                >
+                  <Book className="h-4 w-4 mr-2" />
+                  Study
+                </Link>
                 <Link 
                   to="/profile" 
                   className="flex items-center justify-center px-4 py-3 text-purple-700 border border-purple-300 rounded-xl hover:bg-purple-50 transition"
