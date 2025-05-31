@@ -4,3 +4,5 @@ python-multipart==0.0.6
 httpx==0.26.0
 python-dotenv==1.0.0
 supabase==2.9.0
+pydantic_settings==2.0.1
+pydantic==2.9.0
