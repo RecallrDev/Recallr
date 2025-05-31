@@ -1,21 +1,16 @@
-import { useState, useEffect, useCallback } from 'react';
-import { supabase } from '../../lib/supabase_client';
-import type { Deck } from '../../types/Deck';
+import { useState, useEffect, useCallback } from "react";
+import { supabase } from "../../lib/supabase_client";
+import type { Deck } from "../../types/Deck";
 
 type UseDecksResult = {
-  decks: DeckWithCount[];
+  decks: Deck[];
   isLoading: boolean;
   error: Error | null;
   refetch: () => Promise<void>;
 };
 
-export type DeckWithCount = Deck & {
-  cardCount: number;
-  last_studied?: string;
-};
-
 export function useDecks(): UseDecksResult {
-  const [decks, setDecks] = useState<DeckWithCount[]>([]);
+  const [decks, setDecks] = useState<Deck[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<Error | null>(null);
 
@@ -23,76 +18,48 @@ export function useDecks(): UseDecksResult {
     setIsLoading(true);
     setError(null);
 
-    // 1) Get current user
-    const {
-      data: { user },
-      error: userError,
-    } = await supabase.auth.getUser();
-
-    if (userError || !user) {
-      setDecks([]);
-      setIsLoading(false);
-      setError(userError ?? new Error('No authenticated user'));
-      return;
-    }
-
     try {
-      // 2) Fetch raw decks
-      const { data: rawDecks, error: fetchError } = await supabase
-        .from('decks')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
+      const {
+        data: { session },
+        error: sessionError,
+      } = await supabase.auth.getSession();
 
-      if (fetchError || !rawDecks) {
-        throw fetchError ?? new Error('Failed to fetch decks');
+      if (sessionError || !session) {
+        setDecks([]);
+        setIsLoading(false);
+        setError(sessionError ?? new Error("No authenticated user"));
+        return;
       }
 
-      // 3) For each deck, fetch counts (Basic + MC)
-      const withCounts: DeckWithCount[] = await Promise.all(
-        rawDecks.map(async (deck) => {
-          // Basic cards count
-          const basicPromise = supabase
-            .from('basic_cards')
-            .select('id', { head: true, count: 'exact' })
-            .eq('deck_id', deck.id);
-          // MC cards count
-          const mcPromise = supabase
-            .from('mc_cards')
-            .select('id', { head: true, count: 'exact' })
-            .eq('deck_id', deck.id);
+      const response = await fetch("http://localhost:8000/decks", {
+        method: "GET",
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`,
+          'Content-Type': 'application/json'
+        }
+      });
 
-          const [
-            { count: basicCount = 0, error: basicErr },
-            { count: mcCount = 0, error: mcErr },
-          ] = await Promise.all([basicPromise, mcPromise]);
+      if (!response.ok) {
+        const text = await response.text();
+        throw new Error(text || "Failed to fetch decks");
+      }
 
-          if (basicErr) console.error('Error counting basic:', basicErr);
-          if (mcErr) console.error('Error counting MC:', mcErr);
-
-          return {
-            ...deck,
-            cardCount: (basicCount ?? 0) + (mcCount ?? 0),
-            last_studied: deck.last_studied ?? undefined,
-          };
-        })
-      );
-
-      setDecks(withCounts);
-      setIsLoading(false);
-    } catch (e: any) {
-      console.error('useDecks error:', e);
-      setDecks([]);
-      setError(e);
+      const data: Deck[] = await response.json();
+      setDecks(data);
+    } catch (err: any) {
+      console.error("useDecks error:", err);
+      setError(err instanceof Error ? err : new Error(String(err)));
+    } finally {
       setIsLoading(false);
     }
   }, []);
 
-  // Fetch initially + re‐fetch when auth state changes
   useEffect(() => {
     fetchDecks();
 
-    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
       if (session?.user) {
         fetchDecks();
       } else {
@@ -102,7 +69,7 @@ export function useDecks(): UseDecksResult {
     });
 
     return () => {
-      listener.subscription.unsubscribe();
+      subscription.unsubscribe();
     };
   }, [fetchDecks]);
 
