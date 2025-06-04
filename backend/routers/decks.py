@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
 from typing import List
-from models.deck import DeckResponse, DeckUpdateResponse, DeckUpdate
+from models.deck import DeckResponse, DeckUpdateResponse, DeckUpdate, FinishedStudyDeckUpdate
 from services.deck_service import DeckService
 from dependencies.auth import get_current_user
 
@@ -49,5 +49,18 @@ async def create_deck(
     try:
         user_id = current_user.id if hasattr(current_user, 'id') else current_user['id']
         return await DeckService.create_deck(payload, user_id)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    
+# Update the deck after finishing study
+@router.put("/finish/{deck_id}", response_model=DeckUpdateResponse)
+async def finish_study_deck(
+    deck_id: str,
+    payload: FinishedStudyDeckUpdate,
+    current_user: str = Depends(get_current_user),
+):
+    try:
+        user_id = current_user.id if hasattr(current_user, 'id') else current_user['id']
+        return await DeckService.finish_study_deck(deck_id, payload, user_id)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

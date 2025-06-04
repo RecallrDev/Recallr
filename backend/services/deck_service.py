@@ -115,3 +115,34 @@ class DeckService:
         except Exception as e:
             logging.error(f"Error creating deck: {e}")
             raise Exception(f"Failed to create deck: {str(e)}")
+        
+    # Update the deck after finishing study
+    @staticmethod
+    async def finish_study_deck(deck_id: str, payload: DeckUpdate, current_user_id: str) -> DeckUpdateResponse:
+        # 1) Fetch & check ownership
+        fetch = supabase.table("decks").select("user_id").eq("id", deck_id).single().execute()
+        if not fetch.data:
+            raise Exception("Deck not found")
+        if fetch.data["user_id"] != current_user_id:
+            raise Exception("Not authorized to finish study for this deck")
+
+        # 2) Build update dict
+        update_dict = {}
+        if payload.last_studied is not None:
+            update_dict["last_studied"] = payload.last_studied.isoformat()
+
+        # 3) Update and select exactly those columns
+        resp = supabase.table("decks")\
+            .update(update_dict)\
+            .eq("id", deck_id)\
+            .execute()
+
+        row = resp.data[0]
+        return DeckUpdateResponse(
+            id=str(row["id"]),
+            name=row["name"],
+            category=row.get("category"),
+            color=row.get("color"),
+            last_studied=row.get("last_studied"),
+            user_id=row["user_id"],
+        )

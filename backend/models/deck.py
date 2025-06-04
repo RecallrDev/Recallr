@@ -24,10 +24,7 @@ class DeckUpdateResponse(BaseModel):
     last_studied: Optional[str] = None
     user_id: str
 
-class FinishedStudyDeckUpdate(BaseModel):
-    name: Optional[str] = None
-    color: Optional[str] = None
-    category: Optional[str] = None
+class FinishedStudyDeckUpdate(DeckUpdate):
     last_studied: Optional[datetime] = None
 
 class DeckResponse(DeckBase):
