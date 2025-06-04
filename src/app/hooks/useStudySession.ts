@@ -23,6 +23,7 @@ export function useStudySession(deckId: string | null): UseStudySessionResult {
     setError(null);
 
     try {
+      // TODO: Migrate fetching of cards to backend
       // 1) Fetch Basic Cards
       const { data: basicData, error: basicError } = await supabase
         .from('basic_cards')

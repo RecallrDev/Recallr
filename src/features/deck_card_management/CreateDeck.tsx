@@ -1,6 +1,5 @@
 import React from 'react';
 import { ArrowLeft } from 'lucide-react';
-import { supabase } from '../../lib/supabase_client';
 import { authTokenManager } from '../../util/AuthTokenManager';
 
 const categories = [

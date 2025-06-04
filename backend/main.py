@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from config.settings import settings
-from routers import decks
+from routers import decks, cards
 
 app = FastAPI(title="Recallr API", version="1.0.0")
 
@@ -15,6 +15,7 @@ app.add_middleware(
 
 # Include routers
 app.include_router(decks.router)
+app.include_router(cards.router)
 
 @app.get("/")
 async def root():

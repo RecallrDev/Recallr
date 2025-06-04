@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { supabase } from '../../lib/supabase_client';
+import { authTokenManager } from '../../util/AuthTokenManager';
 
 export type CreateBasicCardProps = {
   deckId: string;
@@ -20,28 +20,30 @@ const CreateBasicCard: React.FC<CreateBasicCardProps> = ({ deckId, deckColor, on
 
     setIsSubmitting(true);
 
-    // 1) Get current user
-    const {
-      data: { user },
-      error: userError,
-    } = await supabase.auth.getUser();
-
-    if (userError || !user) {
-      console.error('You must be logged in to create a card!', userError);
+    // 1) Authenticate current user
+    if (!(await authTokenManager.isAuthenticated())) {
       setIsSubmitting(false);
+      console.error('User is not authenticated');
       return;
     }
 
     // 2) Insert into basic_cards
-    const { error: insertError } = await supabase
-      .from('basic_cards')
-      .insert({
+    const headers = await authTokenManager.getAuthHeaders();
+
+    const response = await fetch('http://localhost:8000/cards', {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({
         deck_id: deckId,
         front: frontText.trim(),
         back: backText.trim(),
-      });
+        type: 'basic',
+      })
+    });
 
-    if (insertError) {
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      const insertError = errorData.error || `HTTP error! Status: ${response.status}`;
       console.error('Error creating card:', insertError);
       setIsSubmitting(false);
     } else {
