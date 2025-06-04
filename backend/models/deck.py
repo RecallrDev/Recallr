@@ -14,6 +14,19 @@ class DeckUpdate(BaseModel):
     name: Optional[str] = None
     color: Optional[str] = None
     category: Optional[str] = None
+
+class DeckUpdateResponse(BaseModel):
+    id: str
+    name: str
+    category: Optional[str] = None
+    color: Optional[str] = None
+    last_studied: Optional[str] = None
+    user_id: str
+
+class FinishedStudyDeckUpdate(BaseModel):
+    name: Optional[str] = None
+    color: Optional[str] = None
+    category: Optional[str] = None
     last_studied: Optional[datetime] = None
 
 class DeckResponse(DeckBase):

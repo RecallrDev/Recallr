@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "../../lib/supabase_client";
 import type { Deck } from "../../types/Deck";
+import { authTokenManager } from '../../util/AuthTokenManager';
 
 type UseDecksResult = {
   decks: Deck[];
@@ -19,24 +20,19 @@ export function useDecks(): UseDecksResult {
     setError(null);
 
     try {
-      const {
-        data: { session },
-        error: sessionError,
-      } = await supabase.auth.getSession();
-
-      if (sessionError || !session) {
+      // Check authentication first
+      if (!(await authTokenManager.isAuthenticated())) {
         setDecks([]);
-        setIsLoading(false);
-        setError(sessionError ?? new Error("No authenticated user"));
+        setError(new Error("No authenticated user"));
         return;
       }
 
+      // Get auth headers
+      const headers = await authTokenManager.getAuthHeaders();
+
       const response = await fetch("http://localhost:8000/decks", {
         method: "GET",
-        headers: {
-          'Authorization': `Bearer ${session.access_token}`,
-          'Content-Type': 'application/json'
-        }
+        headers
       });
 
       if (!response.ok) {
