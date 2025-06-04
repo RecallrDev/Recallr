@@ -8,7 +8,8 @@ class DeckBase(BaseModel):
     category: str = ""
 
 class DeckCreate(DeckBase):
-    pass
+    user_id: str
+    last_studied: Optional[datetime] = None
 
 class DeckUpdate(BaseModel):
     name: Optional[str] = None

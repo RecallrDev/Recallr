@@ -1,6 +1,7 @@
 import React from 'react';
 import { ArrowLeft } from 'lucide-react';
 import { supabase } from '../../lib/supabase_client';
+import { authTokenManager } from '../../util/AuthTokenManager';
 
 const categories = [
   'Languages', 'Science', 'History', 'Mathematics', 'Literature',
@@ -43,35 +44,27 @@ const CreateDeck: React.FC<CreateDeckProps> = ({
 }) => {
 
   const handleCreateDeck = async () => {
-    const {
-      data: { user },
-      error,
-    } = await supabase.auth.getUser();
-
-    if (error || !user) {
-      console.error('You must be logged in to create a deck!', error);
+    if (!(await authTokenManager.isAuthenticated())) {
       return;
     }
 
-    const { error: insertError } = await supabase
-      .from('decks')
-      .insert({
-        user_id: user.id,
+    const headers = await authTokenManager.getAuthHeaders();
+
+    const response = await fetch('http://localhost:8000/decks', {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({
         name: deckName.trim(),
         category,
-        color,
-      });
+        color
+      })
+    });
 
-      if (insertError) {
-        console.error('Error creating deck:', insertError);
-        return;
-      } else {
-        setDeckName('');
-        setCategory('Other');
-        setColor(colorOptions[0].value);
-        onCreateSuccess();
-      }
+    if (response.ok) {
+      onCreateSuccess();
+    }
   }
+
   return (
     <div className="max-w-2xl mx-auto p-6">
       {/* Header */}

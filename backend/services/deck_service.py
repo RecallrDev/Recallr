@@ -1,9 +1,12 @@
 from typing import List
-from models.deck import DeckResponse, DeckUpdate, DeckUpdateResponse
+from models.deck import DeckResponse, DeckUpdate, DeckUpdateResponse, DeckCreate
 from config.db import supabase
 import logging
+import datetime
 
 class DeckService:
+
+    # Get all decks for a user
     @staticmethod
     async def get_user_decks(user_id: str) -> List[DeckResponse]:
         try:
@@ -29,6 +32,7 @@ class DeckService:
             logging.error(f"Error fetching decks: {e}")
             raise Exception(f"Failed to fetch decks: {str(e)}")
 
+    # Update a specific deck
     @staticmethod
     async def update_deck(deck_id: str, payload: DeckUpdate, current_user_id: str) -> DeckUpdateResponse:
         # 1) Fetch & check ownership (same as before) …
@@ -63,6 +67,7 @@ class DeckService:
             user_id=row["user_id"],
         )
     
+    # Delete a specific deck
     @staticmethod
     async def delete_deck(deck_id: str, current_user_id: str):
         # 1) Fetch & check ownership
@@ -79,3 +84,34 @@ class DeckService:
             raise Exception("Failed to delete deck")
 
         return {"message": "Deck deleted successfully"}
+
+    # Create a new deck
+    @staticmethod
+    async def create_deck(payload: DeckCreate, current_user_id: str) -> DeckResponse:
+        try:
+            # Create the deck
+            resp = supabase.table("decks").insert({
+                "name": payload.name,
+                "color": payload.color,
+                "category": payload.category,
+                "user_id": current_user_id,
+                "last_studied": None,
+                "created_at": datetime.datetime.now().isoformat()
+            }).execute()
+
+            if not resp.data:
+                raise Exception("Failed to create deck")
+
+            return DeckResponse(
+                id=str(resp.data[0]["id"]),
+                name=resp.data[0]["name"],
+                color=resp.data[0]["color"],
+                category=resp.data[0]["category"],
+                user_id=current_user_id,
+                created_at=resp.data[0]["created_at"],
+                last_studied=resp.data[0].get("last_studied"),
+                cardCount=0
+            )
+        except Exception as e:
+            logging.error(f"Error creating deck: {e}")
+            raise Exception(f"Failed to create deck: {str(e)}")
