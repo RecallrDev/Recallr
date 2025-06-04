@@ -39,14 +39,14 @@ const Footer: React.FC = () => {
         <div className="grid grid-cols-1 gap-12 sm:grid-cols-2 lg:grid-cols-4">
           <div>
             <Link to="/" className="flex items-center space-x-2">
-                <div className="bg-purple-600 text-white rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold">
-                    R
-                </div>
+              <div className="h-8 flex items-center justify-center text-sm font-bold">
+                <img src="../../../favicon/favicon.svg" alt="Recallr Logo" className="w-6 h-6" />
+              </div>
                 <span className="text-purple-600 font-semibold text-lg">Recallr</span>
             </Link>
 
             <p className="mt-4 text-sm text-gray-500">
-              Revolutionize your learning with our improved Anki-Decks.
+              Revolutionize your learning with our enhanced Flashcards.
             </p>
 
             <div className="mt-6 flex gap-4 text-gray-500">

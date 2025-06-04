@@ -74,8 +74,8 @@ const Navbar: React.FC<NavbarProps> = ({ onLoginClick, onRegisterClick }) => {
               smooth
               className="flex items-center space-x-2"
             >
-              <div className="bg-purple-600 text-white rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold">
-                R
+              <div className="h-8 flex items-center justify-center text-sm font-bold">
+                <img src="../../../favicon/favicon.svg" alt="Recallr Logo" className="w-6 h-6" />
               </div>
               <span className="text-purple-600 font-semibold text-lg">Recallr</span>
             </HashLink>

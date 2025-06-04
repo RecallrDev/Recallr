@@ -14,11 +14,11 @@ const IntroSection: React.FC = () => {
           </span>
 
           <h1 className="mt-3 text-4xl md:text-5xl font-extrabold text-gray-900 leading-tight">
-            Anki Decks, <span className="text-purple-600">improved</span><br />
+            Decks, <span className="text-purple-600">improved</span><br />
             for optimal learning
           </h1>
           <p className="mt-4 text-gray-700 text-lg">
-            Our platform enhances the proven Anki method with advanced features, analytics, and a user-friendly interface.
+            Our platform enhances the proven Flashcard method with advanced features, analytics, and a user-friendly interface.
           </p>
 
           {/* Buttons */}
@@ -39,7 +39,7 @@ const IntroSection: React.FC = () => {
         </div>
 
         {/* Flashcards, hidden on mobile */}
-        <div className="w-full md:w-1/2 hidden md:flex flex-wrap justify-center gap-x-15 gap-y-6">
+        <div className="w-full md:w-1/2 hidden md:flex flex-wrap justify-center gap-x-10 gap-y-6">
 
           {/* 1st card */}
           <div className="rotate-[-6deg] animate-float">
@@ -47,6 +47,7 @@ const IntroSection: React.FC = () => {
               frontHeading="Biology"
               frontText="What is the difference between mitosis and meiosis?"
               backText="Mitosis produces two genetically identical cells; meiosis produces four genetically diverse gametes."
+              color="#9810FA"
             />
           </div>
 
@@ -56,6 +57,7 @@ const IntroSection: React.FC = () => {
               frontHeading="Mathematics"
               frontText="How do you calculate the derivative of f(x) = x²?"
               backText="f'(x) = 2x – apply the power rule."
+              color="#9810FA"
             />
           </div>
 
@@ -65,6 +67,7 @@ const IntroSection: React.FC = () => {
               frontHeading="History"
               frontText="What were the main causes of World War I?"
               backText="Imperialism, militarism, alliance systems, and nationalism."
+              color="#9810FA"
             />
           </div>
         </div>
