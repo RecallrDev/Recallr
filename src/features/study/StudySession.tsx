@@ -7,7 +7,6 @@ import ResetButton from './components/ResetButton';
 import type { Card, BasicCard, MultipleChoiceCard } from '../../types/Card';
 import type { Deck } from '../../types/Deck';
 
-
 export type StudySessionProps = {
   deck: Deck;
   cards: Card[];
@@ -64,7 +63,6 @@ const StudySession: React.FC<StudySessionProps> = ({
         <ResetButton onReset={onReset} color={deck.color} />
       </div>
 
-      {/* Card Display */}
       {currentCard.type === 'basic' ? (
         <BasicCardStudyView
           card={currentCard as BasicCard}
@@ -81,7 +79,7 @@ const StudySession: React.FC<StudySessionProps> = ({
 
       {/* Action Buttons */}
       <ActionButtons
-        deck = {deck}
+        deck={deck}
         showAnswer={showAnswer}
         currentCardIndex={currentCardIndex}
         isLastCard={isLastCard}

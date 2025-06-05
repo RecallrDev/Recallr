@@ -1,8 +1,6 @@
-from typing import List
-from models.card import CardBase, CardCreate, BasicCard, MCCard, MCChoice
+from models.card import CardCreate
 from config.db import supabase
 import logging
-import datetime
 
 class CardService:
 
@@ -62,7 +60,7 @@ class CardService:
                 choices_data = [
                     {
                         "mc_card_id": new_card_id,
-                        "answer_text": choice.text,
+                        "answer_text": choice.answer_text,
                         "is_correct": choice.is_correct,
                         "created_at": iso_created_at
                     }
@@ -79,7 +77,7 @@ class CardService:
                 choices_list = [
                     {
                         "id": choice["id"],
-                        "text": choice["answer_text"],
+                        "answer_text": choice["answer_text"],
                         "is_correct": choice["is_correct"],
                         "created_at": choice["created_at"]
                     }
@@ -97,3 +95,62 @@ class CardService:
         except Exception as e:
             logging.error(f"Error creating mc card: {e}")
             raise Exception(f"Failed to create mc card: {str(e)}")
+        
+    @staticmethod
+    async def get_mc_cards_by_deck(deck_id: str, user_id: str):
+        """Get all MC cards for a specific deck with their choices"""
+        try:
+            resp = supabase.table("mc_cards").select("*").eq("deck_id", deck_id).eq("user_id", user_id).execute()
+            
+            if getattr(resp, "error", None):
+                raise Exception(f"Supabase error fetching MC cards: {resp.error}")
+            
+            mc_cards = resp.data or []
+
+            # Fetch choices for each MC card
+            for card in mc_cards:
+                choices_resp = supabase.table("mc_choices").select("*").eq("mc_card_id", card["id"]).execute()
+                if getattr(choices_resp, "error", None):
+                    logging.error(f"Error fetching choices for card {card['id']}: {choices_resp.error}")
+                    card["choices"] = []
+                    continue
+
+                # Convert types and map fields
+                card["choices"] = [
+                    {
+                        "id": str(choice["id"]),
+                        "answer_text": choice["answer_text"],
+                        "is_correct": choice["is_correct"],
+                        "created_at": choice["created_at"]
+                    }
+                    for choice in (choices_resp.data or [])
+                ]
+                
+                card["id"] = str(card["id"])
+                card["type"] = "multiple_choice"
+
+            return mc_cards
+        except Exception as e:
+            logging.error(f"Error fetching MC cards for deck {deck_id}: {e}")
+            raise Exception(f"Failed to fetch MC cards for deck {deck_id}: {str(e)}")
+
+    @staticmethod
+    async def get_basic_cards_by_deck(deck_id: str, user_id: str):
+        """Get all basic cards for a specific deck"""
+        try:
+            resp = supabase.table("basic_cards").select("*").eq("deck_id", deck_id).execute()
+            
+            if getattr(resp, "error", None):
+                raise Exception(f"Supabase error fetching basic cards: {resp.error}")
+            
+            # Convert IDs to strings and add type
+            basic_cards = []
+            for card in (resp.data or []):
+                card["id"] = str(card["id"])
+                card["type"] = "basic"
+                basic_cards.append(card)
+                
+            return basic_cards
+        except Exception as e:
+            logging.error(f"Error fetching basic cards for deck {deck_id}: {e}")
+            raise Exception(f"Failed to fetch basic cards for deck {deck_id}: {str(e)}")

@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
-import { supabase } from '../../lib/supabase_client';
-import type { Card, BasicCard, MultipleChoiceCard } from '../../types/Card';
+import type { Card, BasicCard, MCCard } from '../../types/Card';
+import { authTokenManager } from '../../util/AuthTokenManager';
 
 type UseStudySessionResult = {
   studyCards: Card[];
@@ -14,6 +14,15 @@ export function useStudySession(deckId: string | null): UseStudySessionResult {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<Error | null>(null);
 
+  const shuffle = (array: Card[]): Card[] => {
+    const shuffled = [...array];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+    return shuffled;
+  };
+
   const fetchCards = useCallback(async () => {
     if (!deckId) {
       setStudyCards([]);
@@ -23,63 +32,48 @@ export function useStudySession(deckId: string | null): UseStudySessionResult {
     setError(null);
 
     try {
-      // TODO: Migrate fetching of cards to backend
-      // 1) Fetch Basic Cards
-      const { data: basicData, error: basicError } = await supabase
-        .from('basic_cards')
-        .select('*')
-        .eq('deck_id', deckId);
+      // Authenticate current user
+      if (!(await authTokenManager.isAuthenticated())) {
+        setError(new Error("No authenticated user"));
+        return;
+      }
 
-      if (basicError) throw basicError;
+      // Get auth headers
+      const headers = await authTokenManager.getAuthHeaders();
 
-      // 2) Fetch MC Cards + their choices
-      const { data: mcRows, error: mcError } = await supabase
-        .from('mc_cards')
-        .select(`
-          id,
-          question,
-          created_at,
-          mc_choices (
-            id,
-            answer_text,
-            is_correct
-          )
-        `)
-        .eq('deck_id', deckId);
+      const response = await fetch(`http://localhost:8000/cards?deck_id=${deckId}`, {
+        method: "GET",
+        headers
+      });
 
-      if (mcError) throw mcError;
+      if (!response.ok) {
+        const text = await response.text();
+        throw new Error(text || "Failed to fetch cards");
+      }
 
-      // 3) Transform into typed arrays
-      const basics: BasicCard[] = (basicData || []).map((bc) => ({
-        id: bc.id,
-        deck_id: bc.deck_id,
-        front: bc.front,
-        back: bc.back,
-        created_at: bc.created_at,
-        type: 'basic',
+      const data = await response.json();
+      const basicData: BasicCard[] = (data.basic_cards || []).map((card: any) => ({
+        ...card,
+        type: 'basic' as const
+      }));
+      
+      const mcData: MCCard[] = (data.mc_cards || []).map((card: any) => ({
+        ...card,
+        type: 'multiple_choice' as const
       }));
 
-      const mcs: MultipleChoiceCard[] = (mcRows || []).map((mc) => ({
-        id: mc.id,
-        deck_id: deckId,
-        question: mc.question,
-        created_at: mc.created_at,
-        choices: (mc.mc_choices || []).map((c) => ({
-          id: c.id,
-          answer_text: c.answer_text,
-          is_correct: c.is_correct,
-        })),
-        type: 'multiple_choice',
-      }));
+      // Merge and shuffle the cards before setting state
+      const allCards: Card[] = [...basicData, ...mcData];
+      const shuffledCards = await shuffle(allCards);
+      
+      setStudyCards(shuffledCards);
 
-      // 4) Merge
-      setStudyCards([...basics, ...mcs]);
-      setIsLoading(false);
     } catch (e: any) {
       console.error('useStudySession error:', e);
-      setError(e);
-      setIsLoading(false);
+      setError(e instanceof Error ? e : new Error(String(e)));
       setStudyCards([]);
+    } finally {
+      setIsLoading(false);
     }
   }, [deckId]);
 
