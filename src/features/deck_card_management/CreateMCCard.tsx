@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Plus, X } from 'lucide-react';
 import { authTokenManager } from '../../util/AuthTokenManager';
 
 export type CreateMCProps = {
@@ -22,9 +23,12 @@ const CreateMultipleChoiceCard: React.FC<CreateMCProps> = ({
   // 1) Track the question itself
   const [question, setQuestion] = useState('');
 
-  // 2) Track up to 5 answers
+  // 2) Start with 2 choices
   const [choices, setChoices] = useState<ChoiceInput[]>(
-    Array.from({ length: 5 }, () => ({ text: '', is_correct: false }))
+    [
+      { text: '', is_correct: false },
+      { text: '', is_correct: false }
+    ]
   );
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -39,6 +43,19 @@ const CreateMultipleChoiceCard: React.FC<CreateMCProps> = ({
     const updated = [...choices];
     updated[index].is_correct = !updated[index].is_correct;
     setChoices(updated);
+  };
+
+  const addChoice = () => {
+    if (choices.length < 10) {
+      setChoices([...choices, { text: '', is_correct: false }]);
+    }
+  };
+
+  const removeChoice = (index: number) => {
+    if (choices.length > 2) {
+      const updated = choices.filter((_, idx) => idx !== index);
+      setChoices(updated);
+    }
   };
 
   const handleCreateMC = async () => {
@@ -79,7 +96,7 @@ const CreateMultipleChoiceCard: React.FC<CreateMCProps> = ({
         type: 'multiple_choice',
         question: question.trim(),
         choices: filledChoices.map((c) => ({
-          text: c.text.trim(),
+          answer_text: c.text.trim(),
           is_correct: c.is_correct,
         })),
       }),
@@ -97,7 +114,12 @@ const CreateMultipleChoiceCard: React.FC<CreateMCProps> = ({
 
     // 5) Clear form
     setQuestion('');
-    setChoices(Array.from({ length: 5 }, () => ({ text: '', is_correct: false })));
+    setChoices(
+      [
+        { text: '', is_correct: false },
+        { text: '', is_correct: false }
+      ]
+    );
     setIsSubmitting(false);
 
     // 6) Notify parent to re‐fetch deck
@@ -122,17 +144,32 @@ const CreateMultipleChoiceCard: React.FC<CreateMCProps> = ({
 
         {/* Answers Section */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Answer Choices (up to 5)
-          </label>
-          <div className="space-y-4">
+          <div className="flex items-center justify-between mb-3">
+            <label className="block text-sm font-medium text-gray-700">
+              Answer Choices ({choices.length}/10)
+            </label>
+            <button
+              type="button"
+              onClick={addChoice}
+              disabled={choices.length >= 10}
+              className="flex items-center gap-1 px-3 py-1 text-sm rounded-md border border-gray-300 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all hover:scale-105 "
+              style={{ backgroundColor: deckColor || '#3B82F6', color: 'white' }}
+            >
+              <Plus size={16} />
+              Add Choice
+            </button>
+          </div>
+          
+          <div className="space-y-3">
             {choices.map((choice, idx) => (
               <div key={idx} className="flex items-center gap-3">
                 <input
                   type="checkbox"
                   checked={choice.is_correct}
                   onChange={() => handleChoiceCorrectToggle(idx)}
-                  className="h-5 w-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                  className="h-5 w-5 border-gray-300 rounded focus:ring-blue-500"
+                  style={{ accentColor: deckColor }}
+                  readOnly
                 />
                 <input
                   type="text"
@@ -141,11 +178,21 @@ const CreateMultipleChoiceCard: React.FC<CreateMCProps> = ({
                   placeholder={`Choice ${idx + 1}`}
                   className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
+                {choices.length > 2 && (
+                  <button
+                    type="button"
+                    onClick={() => removeChoice(idx)}
+                    className="p-1 text-gray-400 hover:text-red-500 transition-colors"
+                  >
+                    <X size={16} />
+                  </button>
+                )}
               </div>
             ))}
           </div>
-          <p className="mt-2 text-sm text-gray-500">
-            Check the box next to each correct answer. Leave wrong choices blank.
+          
+          <p className="mt-3 text-sm text-gray-500">
+            Check the box next to each correct answer. You need at least 2 choices and 1 correct answer.
           </p>
         </div>
 
@@ -157,10 +204,10 @@ const CreateMultipleChoiceCard: React.FC<CreateMCProps> = ({
             disabled={
               !question.trim() ||
               choices.filter((c) => c.text.trim() !== '').length < 2 ||
-              !choices.some((c) => c.is_correct && c.text.trim() !== '') ||
+              !choices.filter((c) => c.text.trim() !== '').some((c) => c.is_correct) ||
               isSubmitting
             }
-            className="text-white px-6 py-2 rounded-lg hover:scale-105 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+            className="text-white px-6 py-2 rounded-lg hover:scale-105 transition-all font-medium disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isSubmitting ? 'Saving…' : 'Create MC Card'}
           </button>

@@ -30,8 +30,6 @@ export function useDecks(): UseDecksResult {
       // Get auth headers
       const headers = await authTokenManager.getAuthHeaders();
 
-      console.log("HERE!!!")
-
       const response = await fetch("http://localhost:8000/decks", {
         method: "GET",
         headers
