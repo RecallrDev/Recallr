@@ -1,4 +1,5 @@
 import React from 'react';
+import { motion } from 'framer-motion';
 import SectionHeader from './section_components/SectionHeader';
 
 interface TeamMember {
@@ -56,8 +57,12 @@ const TeamSection: React.FC = () => {
 
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
             {teamMembers.map((member, index) => (
-              <div 
-                key={index} 
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: index * 0.2 }}
                 className="p-6 flex flex-col items-center text-center group hover:-translate-y-2 transition-all duration-300 bg-white border border-gray-100 hover:border-purple-200 hover:shadow-xl rounded-xl"
               >
                 <div className="h-24 w-24 bg-purple-100 rounded-full flex items-center justify-center mb-4 group-hover:bg-purple-200 transition-colors">
@@ -66,23 +71,23 @@ const TeamSection: React.FC = () => {
                 <h3 className="text-xl font-bold mb-1">{member.name}</h3>
                 <p className="text-purple-600 font-medium mb-3">{member.role}</p>
                 <p className="text-gray-600 text-sm">{member.bio}</p>
-              </div>
+              </motion.div>
             ))}
           </div>
         </div>
 
         <div className="mt-16 max-w-4xl mx-auto">
           <h3 className="text-2xl font-bold text-center text-gray-900 mb-8">Join Our Team</h3>
-          
+
           <div className="bg-white p-8 rounded-xl shadow-sm">
             <p className="text-gray-700 text-lg leading-relaxed text-center mb-6">
               We're always looking for talented individuals who are passionate about education and technology.
               If you believe in our mission and want to help shape the future of learning, we'd love to hear from you.
             </p>
-            
+
             <div className="text-center">
-              <a 
-                href="#contact" 
+              <a
+                href="#contact"
                 className="px-6 py-3 bg-purple-600 text-white font-semibold rounded-xl hover:bg-purple-700 transition inline-block"
               >
                 Get In Touch

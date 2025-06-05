@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite --host",
-    "dev:dev": "vite --host --mode development", 
+    "dev:dev": "vite --host --mode development",
     "dev:prod": "vite --host --mode production",
     "build": "tsc -b && vite build",
     "build:dev": "tsc -b && vite build --mode development",
@@ -17,6 +17,7 @@
     "@supabase/supabase-js": "^2.49.7",
     "@tailwindcss/vite": "^4.1.7",
     "@types/react-router-dom": "^5.3.3",
+    "framer-motion": "^12.16.0",
     "lucide-react": "^0.511.0",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",

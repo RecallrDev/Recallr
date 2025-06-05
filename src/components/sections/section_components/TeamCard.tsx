@@ -25,7 +25,7 @@ const TeamCard: React.FC<TeamCardProps> = ({
         transition-all duration-300
         hover:shadow-xl hover:scale-105 hover:rotate-1
         flex flex-col
-        animate-float 
+        floating
         transform
         even:rotate-[-1deg]
       "

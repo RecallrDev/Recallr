@@ -13,7 +13,7 @@ const CallTOActionSection: React.FC = () => (
         </h2>
 
         <p className="mt-4 text-sm sm:text-base text-white/90">
-          Sign up now and experience how our improved Anki decks can elevate your learning.
+          Sign up now and experience how our improved Flashcards can elevate your learning.
         </p>
 
         {/* email + button */}

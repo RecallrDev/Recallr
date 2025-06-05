@@ -13,6 +13,7 @@
 .flip-card {
   perspective: 1000px;
   cursor: pointer;
+  animation: float 3s
 }
 
 .flip-card-inner {
@@ -22,6 +23,7 @@
 
 .flip-card:hover .flip-card-inner {
   transform: rotateY(180deg);
+  animation-play-state: paused;
 }
 
 /* front and back faces */
@@ -76,6 +78,19 @@ html {
     opacity: 1;
     transform: translateY(0);
   }
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+.floating {
+  animation: float 3s ease-in-out infinite;
 }
 
 .mobile-menu-open {
