@@ -3,6 +3,8 @@ import { supabase } from "../../lib/supabase_client";
 import type { Deck } from "../../types/Deck";
 import { authTokenManager } from '../../util/AuthTokenManager';
 
+const API_URL = import.meta.env.VITE_API_URL;
+
 type UseDecksResult = {
   decks: Deck[];
   isLoading: boolean;
@@ -30,7 +32,7 @@ export function useDecks(): UseDecksResult {
       // Get auth headers
       const headers = await authTokenManager.getAuthHeaders();
 
-      const response = await fetch("http://localhost:8000/decks", {
+      const response = await fetch(`${API_URL}/decks`, {
         method: "GET",
         headers
       });
@@ -41,6 +43,7 @@ export function useDecks(): UseDecksResult {
       }
 
       const data: Deck[] = await response.json();
+      
       setDecks(data);
     } catch (err: any) {
       console.error("useDecks error:", err);
@@ -56,7 +59,6 @@ export function useDecks(): UseDecksResult {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
-      // TODO: Check if this works
       if (!session?.user) {
         setDecks([]);
         setIsLoading(false);

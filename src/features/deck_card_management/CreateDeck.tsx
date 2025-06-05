@@ -2,6 +2,8 @@ import React from 'react';
 import { ArrowLeft } from 'lucide-react';
 import { authTokenManager } from '../../util/AuthTokenManager';
 
+const API_URL = import.meta.env.VITE_API_URL;
+
 const categories = [
   'Languages', 'Science', 'History', 'Mathematics', 'Literature',
   'Geography', 'Medicine', 'Technology', 'Art', 'Music', 'Other'
@@ -49,7 +51,7 @@ const CreateDeck: React.FC<CreateDeckProps> = ({
 
     const headers = await authTokenManager.getAuthHeaders();
 
-    const response = await fetch('http://localhost:8000/decks', {
+    const response = await fetch(`${API_URL}/decks`, {
       method: 'POST',
       headers,
       body: JSON.stringify({

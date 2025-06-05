@@ -2,6 +2,8 @@ import { useState, useEffect, useCallback } from 'react';
 import type { Card, BasicCard, MCCard } from '../../types/Card';
 import { authTokenManager } from '../../util/AuthTokenManager';
 
+const API_URL = import.meta.env.VITE_API_URL;
+
 type UseStudySessionResult = {
   studyCards: Card[];
   isLoading: boolean;
@@ -31,7 +33,7 @@ export function useStudySession(deckId: string | null): UseStudySessionResult {
 
       const headers = await authTokenManager.getAuthHeaders();
       const response = await fetch(
-        `http://localhost:8000/cards?deck_id=${deckId}&shuffle=true`,
+        `${API_URL}/cards?deck_id=${deckId}&shuffle=true`,
         {
           method: "GET",
           headers,

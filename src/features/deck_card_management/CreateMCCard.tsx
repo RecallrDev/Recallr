@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { Plus, X } from 'lucide-react';
 import { authTokenManager } from '../../util/AuthTokenManager';
 
+const API_URL = import.meta.env.VITE_API_URL;
+
 export type CreateMCProps = {
   deckId: string;
   deckColor: string;
@@ -87,7 +89,7 @@ const CreateMultipleChoiceCard: React.FC<CreateMCProps> = ({
     const headers = await authTokenManager.getAuthHeaders();
 
     // 4) Insert into multiple_choice_cards - Fixed payload structure
-    const response = await fetch('http://localhost:8000/cards', {
+    const response = await fetch(`${API_URL}/cards`, {
       method: 'POST',
       headers,
       body: JSON.stringify({

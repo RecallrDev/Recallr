@@ -3,6 +3,8 @@ import { ArrowLeft } from 'lucide-react';
 import { authTokenManager } from '../../util/AuthTokenManager';
 import ConfirmDeckDeletionModal from './ConfirmDeckDeletionModal';
 
+const API_URL = import.meta.env.VITE_API_URL;
+
 const categories = [
   'Languages', 'Science', 'History', 'Mathematics', 'Literature',
   'Geography', 'Medicine', 'Technology', 'Art', 'Music', 'Other'
@@ -52,7 +54,7 @@ const EditDeck: React.FC<EditDeckProps> = ({ deck, onCancel, onUpdateSuccess, on
     const headers = await authTokenManager.getAuthHeaders();
 
     try {
-      const response = await fetch(`http://localhost:8000/decks/${deck.id}`, {
+      const response = await fetch(`${API_URL}/decks/${deck.id}`, {
         method: 'PUT',
         headers,
         body: JSON.stringify({
@@ -81,7 +83,7 @@ const EditDeck: React.FC<EditDeckProps> = ({ deck, onCancel, onUpdateSuccess, on
     if (!token) return;
     const headers = await authTokenManager.getAuthHeaders();
 
-    const response = await fetch(`http://localhost:8000/decks/${deck.id}`, {
+    const response = await fetch(`${API_URL}/decks/${deck.id}`, {
       method: 'DELETE',
       headers,
     });

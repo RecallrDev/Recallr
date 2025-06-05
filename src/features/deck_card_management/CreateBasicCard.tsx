@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { authTokenManager } from '../../util/AuthTokenManager';
 
+const API_URL = import.meta.env.VITE_API_URL;
+
 export type CreateBasicCardProps = {
   deckId: string;
   deckColor: string;
@@ -30,7 +32,7 @@ const CreateBasicCard: React.FC<CreateBasicCardProps> = ({ deckId, deckColor, on
     // 2) Insert into basic_cards
     const headers = await authTokenManager.getAuthHeaders();
 
-    const response = await fetch('http://localhost:8000/cards', {
+    const response = await fetch(`${API_URL}/cards`, {
       method: 'POST',
       headers,
       body: JSON.stringify({

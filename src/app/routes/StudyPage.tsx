@@ -6,6 +6,8 @@ import { useDecks } from '../hooks/useDecks';
 import { useStudySession } from '../hooks/useStudySession';
 import { authTokenManager } from '../../util/AuthTokenManager';
 
+const API_URL = import.meta.env.VITE_API_URL;
+
 const StudyPage: React.FC = () => {
   const { deckId } = useParams<{ deckId: string }>();
   const { decks, isLoading: decksLoading, error: decksError, refetch: refetchDecks } = useDecks();
@@ -63,7 +65,7 @@ const StudyPage: React.FC = () => {
 
     const headers = await authTokenManager.getAuthHeaders();
 
-    const response = await fetch(`http://localhost:8000/decks/finish/${deckId}`, {
+    const response = await fetch(`${API_URL}/decks/finish/${deckId}`, {
       method: 'PUT',
       headers,
       body: JSON.stringify({
