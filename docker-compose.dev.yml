@@ -1,15 +1,4 @@
 services:
-  backend:
-    build: ./backend
-    container_name: recallr-backend-dev
-    restart: unless-stopped
-    environment:
-      - ENVIRONMENT=development
-    ports:
-      - "8000:8000"
-    networks:
-      - recallr-network
-
   frontend:
     image: node:20-alpine
     container_name: recallr-frontend-dev
@@ -20,12 +9,10 @@ services:
     ports:
       - "5173:5173"
     env_file:
-      - .env  # Environment-Datei laden
-    command: sh -c "npm install && npm run dev:dev -- --host 0.0.0.0"  # ← Dein Script
-    depends_on:
-      - backend
+      - .env
+    command: sh -c "npm install && npm run dev:dev -- --host 0.0.0.0"
     networks:
-      - recallr-network
+      - recallr_recallr-network  # ← Geändert!
 
   nginx:
     image: nginx:alpine
@@ -39,13 +26,12 @@ services:
       - /etc/letsencrypt:/etc/letsencrypt:ro
     depends_on:
       - frontend
-      - backend
     networks:
-      - recallr-network
+      - recallr_recallr-network  # ← Geändert!
 
 networks:
-  recallr-network:
-    driver: bridge
+  recallr_recallr-network:  # ← Geändert!
+    external: true
 
 volumes:
   node_modules:
