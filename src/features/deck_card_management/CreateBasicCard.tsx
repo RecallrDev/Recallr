@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { supabase } from '../../lib/supabase_client';
+import { Image } from 'lucide-react';
+import UploadImageModal from './UploadImageModal';
 
 export type CreateBasicCardProps = {
   deckId: string;
@@ -12,6 +14,7 @@ const CreateBasicCard: React.FC<CreateBasicCardProps> = ({ deckId, deckColor, on
   const [frontText, setFrontText] = useState('');
   const [backText, setBackText] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showUploadModal, setShowUploadModal] = useState(false);
 
   const handleCreateCard = async () => {
     if (!frontText.trim() || !backText.trim()) {
@@ -91,9 +94,9 @@ const CreateBasicCard: React.FC<CreateBasicCardProps> = ({ deckId, deckColor, on
         <div className="flex gap-3 pt-2">
           <button
             onClick={handleCreateCard}
-            style={ { backgroundColor: deckColor || '#3B82F6' }}
+            style={{ backgroundColor: deckColor || '#3B82F6' }}
             disabled={!frontText.trim() || !backText.trim() || isSubmitting}
-            className=" text-white px-6 py-2 rounded-lg hover:scale-105 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+            className="text-white px-6 py-2 rounded-lg hover:scale-105 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isSubmitting ? 'Saving…' : 'Create Card'}
           </button>
@@ -103,7 +106,27 @@ const CreateBasicCard: React.FC<CreateBasicCardProps> = ({ deckId, deckColor, on
           >
             Cancel
           </button>
+          <button
+            onClick={() => setShowUploadModal(true)}
+            style={{ backgroundColor: deckColor || '#3B82F6' }}
+            disabled={isSubmitting}
+            className="text-white px-6 py-2 rounded-lg hover:scale-105 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed ml-auto"
+          >
+            <Image className="inline-block" />
+          </button>
         </div>
+
+          {showUploadModal && (
+          <UploadImageModal
+            cardType="basic"
+            onCancel={() => setShowUploadModal(false)}
+            onUpload={async (file, location) => {
+              // Handle the file upload
+              console.log('Uploading file:', file, 'to location:', location);
+              setShowUploadModal(false);
+            }}
+          />
+        )}
       </div>
     </div>
   );

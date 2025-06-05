@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { supabase } from '../../lib/supabase_client';
+import { Image } from 'lucide-react';
+import UploadImageModal from './UploadImageModal';
 
 export type CreateMCProps = {
   deckId: string;
@@ -28,6 +30,8 @@ const CreateMultipleChoiceCard: React.FC<CreateMCProps> = ({
   );
 
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const [showUploadModal, setShowUploadModal] = useState(false);
 
   const handleChoiceTextChange = (index: number, newText: string) => {
     const updated = [...choices];
@@ -185,7 +189,28 @@ const CreateMultipleChoiceCard: React.FC<CreateMCProps> = ({
           >
             Cancel
           </button>
+          <button
+            onClick={() => setShowUploadModal(true)}
+            style={{ backgroundColor: deckColor || '#3B82F6' }}
+            disabled={isSubmitting}
+            className="text-white px-6 py-2 rounded-lg hover:scale-105 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed ml-auto"
+          >
+            <Image className="inline-block" />
+          </button>
         </div>
+
+        {/* Upload Image Modal */}
+          {showUploadModal && (
+          <UploadImageModal
+            cardType="mc"
+            onCancel={() => setShowUploadModal(false)}
+            onUpload={async (file, location) => {
+              // Handle the file upload
+              console.log('Uploading file:', file, 'to location:', location);
+              setShowUploadModal(false);
+            }}
+          />
+        )}
       </div>
     </div>
   );
