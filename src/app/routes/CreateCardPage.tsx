@@ -41,7 +41,6 @@ const CreateCardPage: React.FC = () => {
   }
 
   const handleCreateSuccess = async () => {
-    await refetchDecks();
     navigate(`/decks/${deck.id}/cards/new`);
   };
 

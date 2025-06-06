@@ -27,10 +27,10 @@ const Footer: React.FC = () => {
 
   // Legal links
   const legalLinks = [
-    { name: "Privacy Policy", path: "/privacy" },
-    { name: "Terms of Service", path: "/terms" },
-    { name: "Imprint", path: "/imprint" },
-    { name: "Cookie Settings", path: "/cookies" }
+    { name: "Privacy Policy", path: "#/privacy" },
+    { name: "Terms of Service", path: "#/terms" },
+    { name: "Imprint", path: "#/imprint" },
+    { name: "Cookie Settings", path: "#/cookies" }
   ];
 
   return (
@@ -110,12 +110,13 @@ const Footer: React.FC = () => {
             <ul className="space-y-2">
               {legalLinks.map((link) => (
                 <li key={link.name}>
-                  <Link
+                  <HashLink
                     to={link.path}
+                    smooth
                     className="text-sm text-gray-500 hover:text-purple-600 transition-colors"
                   >
                     {link.name}
-                  </Link>
+                  </HashLink>
                 </li>
               ))}
             </ul>

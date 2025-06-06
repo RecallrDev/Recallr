@@ -1,5 +1,8 @@
 import React, { useState } from 'react';
-import { supabase } from '../../lib/supabase_client';
+import { Plus, X } from 'lucide-react';
+import { authTokenManager } from '../../util/AuthTokenManager';
+
+const API_URL = import.meta.env.VITE_API_URL;
 
 export type CreateMCProps = {
   deckId: string;
@@ -9,7 +12,7 @@ export type CreateMCProps = {
 };
 
 type ChoiceInput = {
-  answer_text: string;
+  text: string;
   is_correct: boolean;
 };
 
@@ -22,16 +25,19 @@ const CreateMultipleChoiceCard: React.FC<CreateMCProps> = ({
   // 1) Track the question itself
   const [question, setQuestion] = useState('');
 
-  // 2) Track up to 5 answers
+  // 2) Start with 2 choices
   const [choices, setChoices] = useState<ChoiceInput[]>(
-    Array.from({ length: 5 }, () => ({ answer_text: '', is_correct: false }))
+    [
+      { text: '', is_correct: false },
+      { text: '', is_correct: false }
+    ]
   );
 
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleChoiceTextChange = (index: number, newText: string) => {
     const updated = [...choices];
-    updated[index].answer_text = newText;
+    updated[index].text = newText;
     setChoices(updated);
   };
 
@@ -41,13 +47,26 @@ const CreateMultipleChoiceCard: React.FC<CreateMCProps> = ({
     setChoices(updated);
   };
 
+  const addChoice = () => {
+    if (choices.length < 10) {
+      setChoices([...choices, { text: '', is_correct: false }]);
+    }
+  };
+
+  const removeChoice = (index: number) => {
+    if (choices.length > 2) {
+      const updated = choices.filter((_, idx) => idx !== index);
+      setChoices(updated);
+    }
+  };
+
   const handleCreateMC = async () => {
     // 1) Basic validation: question must not be empty, at least two answers filled, at least one correct
     if (!question.trim()) {
       return;
     }
     // Count how many choice texts are non‐empty
-    const filledChoices = choices.filter((c) => c.answer_text.trim() !== '');
+    const filledChoices = choices.filter((c) => c.text.trim() !== '');
     if (filledChoices.length < 2) {
       // require at least 2 answers
       return;
@@ -60,59 +79,49 @@ const CreateMultipleChoiceCard: React.FC<CreateMCProps> = ({
     setIsSubmitting(true);
 
     // 2) Get current user
-    const {
-      data: { user },
-      error: userError,
-    } = await supabase.auth.getUser();
-
-    if (userError || !user) {
-      console.error('You must be logged in to create a multiple choice card', userError);
+    if (!(await authTokenManager.isAuthenticated())) {
       setIsSubmitting(false);
+      console.error('User is not authenticated');
       return;
     }
 
-    // 3) Insert into mc_cards
-    const { data: mcCardData, error: insertCardError } = await supabase
-      .from('mc_cards')
-      .insert({
+    // 3) Prepare headers
+    const headers = await authTokenManager.getAuthHeaders();
+
+    // 4) Insert into multiple_choice_cards - Fixed payload structure
+    const response = await fetch(`${API_URL}/cards`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({
         deck_id: deckId,
-        user_id: user.id,
+        created_at: new Date().toISOString(),
+        type: 'multiple_choice',
         question: question.trim(),
-      })
-      .select()
-      .single();
+        choices: filledChoices.map((c) => ({
+          answer_text: c.text.trim(),
+          is_correct: c.is_correct,
+        })),
+      }),
+    });
 
-    if (insertCardError || !mcCardData) {
-      console.error('Error creating MC card:', insertCardError);
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      const insertError = errorData.error || `HTTP error! Status: ${response.status}`;
+      console.error('Error creating MC card:', insertError);
       setIsSubmitting(false);
       return;
-    }
-
-    const newMcCardId = mcCardData.id;
-
-    // 4) Insert each filled choice into mc_choices
-    const choicesToInsert = choices
-      .map((c) => ({
-        mc_card_id: newMcCardId,
-        answer_text: c.answer_text.trim(),
-        is_correct: c.is_correct,
-      }))
-      .filter((c) => c.answer_text !== '');
-
-    // Insert all non‐empty choices
-    const { error: insertChoicesError } = await supabase
-      .from('mc_choices')
-      .insert(choicesToInsert);
-
-    if (insertChoicesError) {
-      console.error('Error inserting MC choices:', insertChoicesError);
-      setIsSubmitting(false);
-      return;
+    } else {
+      console.log('MC card created successfully');
     }
 
     // 5) Clear form
     setQuestion('');
-    setChoices(Array.from({ length: 5 }, () => ({ answer_text: '', is_correct: false })));
+    setChoices(
+      [
+        { text: '', is_correct: false },
+        { text: '', is_correct: false }
+      ]
+    );
     setIsSubmitting(false);
 
     // 6) Notify parent to re‐fetch deck
@@ -137,30 +146,55 @@ const CreateMultipleChoiceCard: React.FC<CreateMCProps> = ({
 
         {/* Answers Section */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Answer Choices (up to 5)
-          </label>
-          <div className="space-y-4">
+          <div className="flex items-center justify-between mb-3">
+            <label className="block text-sm font-medium text-gray-700">
+              Answer Choices ({choices.length}/10)
+            </label>
+            <button
+              type="button"
+              onClick={addChoice}
+              disabled={choices.length >= 10}
+              className="flex items-center gap-1 px-3 py-1 text-sm rounded-md border border-gray-300 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all hover:scale-105 "
+              style={{ backgroundColor: deckColor || '#3B82F6', color: 'white' }}
+            >
+              <Plus size={16} />
+              Add Choice
+            </button>
+          </div>
+          
+          <div className="space-y-3">
             {choices.map((choice, idx) => (
               <div key={idx} className="flex items-center gap-3">
                 <input
                   type="checkbox"
                   checked={choice.is_correct}
                   onChange={() => handleChoiceCorrectToggle(idx)}
-                  className="h-5 w-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                  className="h-5 w-5 border-gray-300 rounded focus:ring-blue-500"
+                  style={{ accentColor: deckColor }}
+                  readOnly
                 />
                 <input
                   type="text"
-                  value={choice.answer_text}
+                  value={choice.text}
                   onChange={(e) => handleChoiceTextChange(idx, e.target.value)}
                   placeholder={`Choice ${idx + 1}`}
                   className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
+                {choices.length > 2 && (
+                  <button
+                    type="button"
+                    onClick={() => removeChoice(idx)}
+                    className="p-1 text-gray-400 hover:text-red-500 transition-colors"
+                  >
+                    <X size={16} />
+                  </button>
+                )}
               </div>
             ))}
           </div>
-          <p className="mt-2 text-sm text-gray-500">
-            Check the box next to each correct answer. Leave wrong choices blank.
+          
+          <p className="mt-3 text-sm text-gray-500">
+            Check the box next to each correct answer. You need at least 2 choices and 1 correct answer.
           </p>
         </div>
 
@@ -171,11 +205,11 @@ const CreateMultipleChoiceCard: React.FC<CreateMCProps> = ({
             style={{ backgroundColor: deckColor || '#3B82F6' }}
             disabled={
               !question.trim() ||
-              choices.filter((c) => c.answer_text.trim() !== '').length < 2 ||
-              !choices.some((c) => c.is_correct && c.answer_text.trim() !== '') ||
+              choices.filter((c) => c.text.trim() !== '').length < 2 ||
+              !choices.filter((c) => c.text.trim() !== '').some((c) => c.is_correct) ||
               isSubmitting
             }
-            className="text-white px-6 py-2 rounded-lg hover:scale-105 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+            className="text-white px-6 py-2 rounded-lg hover:scale-105 transition-all font-medium disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isSubmitting ? 'Saving…' : 'Create MC Card'}
           </button>

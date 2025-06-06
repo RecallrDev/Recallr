@@ -1,5 +1,6 @@
 import React from 'react';
 import { Plus } from 'lucide-react';
+import { motion } from 'framer-motion';
 import DeckCard from './DeckCard';
 import type { Deck } from '../../types/Deck';
 
@@ -8,7 +9,21 @@ export type DeckListProps = {
   onCreateDeck: () => void;
   onStudyDeck: (deck: Deck) => void;
   onEditDeck: (deck: Deck) => void;
-}
+};
+
+const containerVariants = {
+  hidden: {},
+  show: {
+    transition: {
+      staggerChildren: 0.1, // stagger each child by 0.1s
+    },
+  },
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 10 },
+  show: { opacity: 1, y: 0 },
+};
 
 const DeckList: React.FC<DeckListProps> = ({
   decks,
@@ -30,17 +45,36 @@ const DeckList: React.FC<DeckListProps> = ({
         </button>
       </div>
 
-      {/* Deck Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {/* Deck Cards Grid with entrance animation */}
+      <motion.div
+        variants={containerVariants}
+        initial="hidden"
+        animate="show"
+        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+      >
         {decks.map((deck) => (
-          <DeckCard
+          <motion.div
             key={deck.id}
-            deck={deck}
-            onStudy={onStudyDeck}
-            onEdit={onEditDeck}
-          />
+            variants={itemVariants}
+            className="
+              rounded-lg 
+              overflow-hidden 
+              shadow-md 
+              hover:shadow-xl 
+              transform 
+              hover:scale-105 
+              transition 
+              duration-200
+            "
+          >
+            <DeckCard
+              deck={deck}
+              onStudy={onStudyDeck}
+              onEdit={onEditDeck}
+            />
+          </motion.div>
         ))}
-      </div>
+      </motion.div>
     </div>
   );
 };

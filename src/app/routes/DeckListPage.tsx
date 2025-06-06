@@ -2,7 +2,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import DeckList from '../../features/deck_card_management/DeckList';
 import { useDecks } from '../hooks/useDecks';
-import type { DeckWithCount } from '../hooks/useDecks';
+import type { Deck } from '../../types/Deck';
 
 const DeckListPage: React.FC = () => {
   const navigate = useNavigate();
@@ -12,12 +12,13 @@ const DeckListPage: React.FC = () => {
   const handleCreateDeck = () => navigate('/decks/new');
 
   // “Study” button → /study/:deckId
-  const handleStudyDeck = (deck: DeckWithCount) => {
+  const handleStudyDeck = (deck: Deck) => {
     navigate(`/study/${deck.id}`);
   };
 
   // “Edit” button → /decks/:deckId/edit
-  const handleEditDeck = (deck: DeckWithCount) => {
+  const handleEditDeck = (deck: Deck) => {
+    console.log(deck.color);
     navigate(`/decks/${deck.id}/edit`);
   };
 

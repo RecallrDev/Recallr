@@ -4,6 +4,9 @@ import { useParams, Navigate } from 'react-router-dom';
 import StudySession from '../../features/study/StudySession';
 import { useDecks } from '../hooks/useDecks';
 import { useStudySession } from '../hooks/useStudySession';
+import { authTokenManager } from '../../util/AuthTokenManager';
+
+const API_URL = import.meta.env.VITE_API_URL;
 
 const StudyPage: React.FC = () => {
   const { deckId } = useParams<{ deckId: string }>();
@@ -54,16 +57,31 @@ const StudyPage: React.FC = () => {
     }
     // At last card: update `last_studied`
     const nowIso = new Date().toISOString();
-    const { error: updateError } = await (
-      await import('../../lib/supabase_client')
-    ).supabase
-      .from('decks')
-      .update({ last_studied: nowIso })
-      .eq('id', deck.id);
-
-    if (!updateError) {
-      await refetchDecks();
+    
+    if (!(await authTokenManager.isAuthenticated())) {
+      console.warn('User not authenticated, cannot update last studied time');
+      return;
     }
+
+    const headers = await authTokenManager.getAuthHeaders();
+
+    const response = await fetch(`${API_URL}/decks/finish/${deckId}`, {
+      method: 'PUT',
+      headers,
+      body: JSON.stringify({
+        name: deck.name.trim(),
+        category: deck.category,
+        color: deck.color,
+        last_studied: nowIso,
+      }),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`Failed to update last studied time: ${errorText}`);
+      return;
+    }
+
     // Go back to /decks when finished
     window.location.href = '/decks';
   };

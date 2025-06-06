@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import { ArrowLeft } from 'lucide-react';
-import { supabase } from '../../lib/supabase_client';
+import { authTokenManager } from '../../util/AuthTokenManager';
 import ConfirmDeckDeletionModal from './ConfirmDeckDeletionModal';
+
+const API_URL = import.meta.env.VITE_API_URL;
 
 const categories = [
   'Languages', 'Science', 'History', 'Mathematics', 'Literature',
@@ -43,33 +45,55 @@ const EditDeck: React.FC<EditDeckProps> = ({ deck, onCancel, onUpdateSuccess, on
 
   const handleUpdateDeck = async () => {
     setLoading(true);
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    if (authError || !user) {
-      console.error('You must be logged in to edit a deck!', authError);
+    const token = await authTokenManager.getToken();
+    if (!token) {
       setLoading(false);
       return;
     }
 
-    const { error: updateError } = await supabase
-      .from('decks')
-      .update({
-        name: deckName.trim(),
-        category,
-        color,
-      })
-      .eq('id', deck.id);
+    const headers = await authTokenManager.getAuthHeaders();
 
-    if (updateError) {
-      console.error('Error updating deck:', updateError);
-    } else {
+    try {
+      const response = await fetch(`${API_URL}/decks/${deck.id}`, {
+        method: 'PUT',
+        headers,
+        body: JSON.stringify({
+          name: deckName.trim(),
+          category,
+          color
+        }),
+      });
+
+      if (!response.ok) {
+        const errText = await response.text();
+        throw new Error(errText || 'Failed to update deck');
+      }
+
+      // Optionally, you can parse the returned deck, but all you need is to notify parent.
       onUpdateSuccess();
+    } catch (err: any) {
+      console.error('Error updating deck via Python backend:', err);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   const handleDelete = async () => {
-    await supabase.from('basic_cards').delete().eq('deck_id', deck.id);
-    await supabase.from('decks').delete().eq('id', deck.id);
+    const token = await authTokenManager.getToken();
+    if (!token) return;
+    const headers = await authTokenManager.getAuthHeaders();
+
+    const response = await fetch(`${API_URL}/decks/${deck.id}`, {
+      method: 'DELETE',
+      headers,
+    });
+
+    if (!response.ok) {
+      const errText = await response.text();
+      throw new Error(errText || 'Failed to delete deck');
+    }
+
+    // Notify parent component about successful deletion
     onDeleteSuccess();
   };
 
