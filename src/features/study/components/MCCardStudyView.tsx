@@ -2,12 +2,14 @@
 import React from 'react';
 import { useState, useEffect } from 'react';
 import type { MultipleChoiceCard } from '../../../types/Card';
+import testImage from '../test_images/testImage.png';
 
 const MCCardStudyView: React.FC<{
   card: MultipleChoiceCard;
   showAnswer: boolean;
   deckColor: string;
-}> = ({ card, showAnswer, deckColor }) => {
+  frontImage?: string;
+}> = ({ card, showAnswer, deckColor, frontImage=testImage }) => {
   // Track which choice indices are currently selected
   const [selectedIndices, setSelectedIndices] = useState<number[]>([]);
 
@@ -28,6 +30,16 @@ const MCCardStudyView: React.FC<{
     <div className="bg-white border border-gray-200 rounded-lg shadow-md p-6 space-y-6 min-h-[16rem] flex flex-col">
       {/* Question */}
       <div className="text-lg font-medium text-gray-800">{card.question}</div>
+
+        {frontImage && (
+          <div className="w-full max-w-md justify-center mx-auto">
+            <img
+              src={frontImage}
+              alt="Front side image"
+              className="w-full h-auto rounded-lg shadow-sm border border-gray-100"
+            />
+          </div>
+        )}
 
       {/* Choices */}
       <div className="space-y-2 flex-1 overflow-y-auto">
