@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { supabase } from '../../lib/supabase_client';
-import { Image } from 'lucide-react';
-import UploadImageModal from './UploadImageModal';
+import { Image, X } from 'lucide-react';
+import ImageUploadModal from './UploadImageModal';
+import { type ImageUploadResult } from '../../app/hooks/useImageUpload';
 
 export type CreateMCProps = {
   deckId: string;
@@ -30,8 +31,27 @@ const CreateMultipleChoiceCard: React.FC<CreateMCProps> = ({
   );
 
   const [isSubmitting, setIsSubmitting] = useState(false);
-
   const [showUploadModal, setShowUploadModal] = useState(false);
+  
+  // Image states (MC cards only have one image for the question)
+  const [questionImage, setQuestionImage] = useState<string | null>(null);
+  const [questionThumbnail, setQuestionThumbnail] = useState<string | null>(null);
+
+  const handleImageUpload = (result: ImageUploadResult, location: 'front' | 'back') => {
+    const fullUrl = `${import.meta.env.VITE_API_URL || 'http://localhost:8000'}${result.url}`;
+    const thumbnailUrl = result.thumbnail_url 
+      ? `${import.meta.env.VITE_API_URL || 'http://localhost:8000'}${result.thumbnail_url}`
+      : fullUrl;
+
+    setQuestionImage(fullUrl);
+    setQuestionThumbnail(thumbnailUrl);
+    setShowUploadModal(false);
+  };
+
+  const removeImage = () => {
+    setQuestionImage(null);
+    setQuestionThumbnail(null);
+  };
 
   const handleChoiceTextChange = (index: number, newText: string) => {
     const updated = [...choices];
@@ -47,80 +67,89 @@ const CreateMultipleChoiceCard: React.FC<CreateMCProps> = ({
 
   const handleCreateMC = async () => {
     // 1) Basic validation: question must not be empty, at least two answers filled, at least one correct
-    if (!question.trim()) {
+    if (!question.trim() && !questionImage) {
+      alert('Please add a question text or image');
       return;
     }
+    
     // Count how many choice texts are non‐empty
     const filledChoices = choices.filter((c) => c.answer_text.trim() !== '');
     if (filledChoices.length < 2) {
-      // require at least 2 answers
+      alert('Please provide at least 2 answer choices');
       return;
     }
+    
     // Must have at least one is_correct = true among the filled choices
     if (!filledChoices.some((c) => c.is_correct)) {
+      alert('Please mark at least one answer as correct');
       return;
     }
 
     setIsSubmitting(true);
 
-    // 2) Get current user
-    const {
-      data: { user },
-      error: userError,
-    } = await supabase.auth.getUser();
+    try {
+      // 2) Get current user
+      const {
+        data: { user },
+        error: userError,
+      } = await supabase.auth.getUser();
 
-    if (userError || !user) {
-      console.error('You must be logged in to create a multiple choice card', userError);
+      if (userError || !user) {
+        console.error('You must be logged in to create a multiple choice card', userError);
+        return;
+      }
+
+      // 3) Insert into mc_cards
+      const { data: mcCardData, error: insertCardError } = await supabase
+        .from('mc_cards')
+        .insert({
+          deck_id: deckId,
+          user_id: user.id,
+          question: question.trim(),
+          question_image: questionImage,
+        })
+        .select()
+        .single();
+
+      if (insertCardError || !mcCardData) {
+        console.error('Error creating MC card:', insertCardError);
+        return;
+      }
+
+      const newMcCardId = mcCardData.id;
+
+      // 4) Insert each filled choice into mc_choices
+      const choicesToInsert = choices
+        .map((c) => ({
+          mc_card_id: newMcCardId,
+          answer_text: c.answer_text.trim(),
+          is_correct: c.is_correct,
+        }))
+        .filter((c) => c.answer_text !== '');
+
+      // Insert all non‐empty choices
+      const { error: insertChoicesError } = await supabase
+        .from('mc_choices')
+        .insert(choicesToInsert);
+
+      if (insertChoicesError) {
+        console.error('Error inserting MC choices:', insertChoicesError);
+        return;
+      }
+
+      // 5) Clear form
+      setQuestion('');
+      setChoices(Array.from({ length: 5 }, () => ({ answer_text: '', is_correct: false })));
+      setQuestionImage(null);
+      setQuestionThumbnail(null);
+
+      // 6) Notify parent to re‐fetch deck
+      onCreateSuccess();
+    } catch (error) {
+      console.error('Unexpected error:', error);
+    } finally {
       setIsSubmitting(false);
-      return;
     }
-
-    // 3) Insert into mc_cards
-    const { data: mcCardData, error: insertCardError } = await supabase
-      .from('mc_cards')
-      .insert({
-        deck_id: deckId,
-        user_id: user.id,
-        question: question.trim(),
-      })
-      .select()
-      .single();
-
-    if (insertCardError || !mcCardData) {
-      console.error('Error creating MC card:', insertCardError);
-      setIsSubmitting(false);
-      return;
-    }
-
-    const newMcCardId = mcCardData.id;
-
-    // 4) Insert each filled choice into mc_choices
-    const choicesToInsert = choices
-      .map((c) => ({
-        mc_card_id: newMcCardId,
-        answer_text: c.answer_text.trim(),
-        is_correct: c.is_correct,
-      }))
-      .filter((c) => c.answer_text !== '');
-
-    // Insert all non‐empty choices
-    const { error: insertChoicesError } = await supabase
-      .from('mc_choices')
-      .insert(choicesToInsert);
-
-    if (insertChoicesError) {
-      console.error('Error inserting MC choices:', insertChoicesError);
-      setIsSubmitting(false);
-      return;
-    }
-
-    // 5) Clear form
-    setQuestion('');
-    setChoices(Array.from({ length: 5 }, () => ({ answer_text: '', is_correct: false })));
-    setIsSubmitting(false);
-
-    // 6) Notify parent to re‐fetch deck
-    onCreateSuccess();
   };
 
   return (
@@ -138,6 +167,28 @@ const CreateMultipleChoiceCard: React.FC<CreateMCProps> = ({
             rows={3}
           />
         </div>
+
+        {/* Question Image Preview */}
+        {questionThumbnail && (
+          <div className="relative">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Question Image
+            </label>
+            <div className="relative inline-block">
+              <img 
+                src={questionThumbnail} 
+                alt="Question preview" 
+                className="h-24 w-auto rounded-lg border border-gray-200"
+              />
+              <button
+                onClick={removeImage}
+                className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 transition-colors"
+              >
+                <X size={14} />
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Answers Section */}
         <div>
@@ -174,7 +225,7 @@ const CreateMultipleChoiceCard: React.FC<CreateMCProps> = ({
             onClick={handleCreateMC}
             style={{ backgroundColor: deckColor || '#3B82F6' }}
             disabled={
-              !question.trim() ||
+              (!question.trim() && !questionImage) ||
               choices.filter((c) => c.answer_text.trim() !== '').length < 2 ||
               !choices.some((c) => c.is_correct && c.answer_text.trim() !== '') ||
               isSubmitting
@@ -195,20 +246,16 @@ const CreateMultipleChoiceCard: React.FC<CreateMCProps> = ({
             disabled={isSubmitting}
             className="text-white px-6 py-2 rounded-lg hover:scale-105 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed ml-auto"
           >
-            <Image className="inline-block" />
+            <Image className="inline-block" size={20} />
           </button>
         </div>
 
         {/* Upload Image Modal */}
-          {showUploadModal && (
-          <UploadImageModal
+        {showUploadModal && (
+          <ImageUploadModal
             cardType="mc"
             onCancel={() => setShowUploadModal(false)}
-            onUpload={async (file, location) => {
-              // Handle the file upload
-              console.log('Uploading file:', file, 'to location:', location);
-              setShowUploadModal(false);
-            }}
+            onUpload={handleImageUpload}
           />
         )}
       </div>
