@@ -2,6 +2,7 @@ import React from 'react';
 import { Plus } from 'lucide-react';
 import { motion } from 'framer-motion';
 import DeckCard from './DeckCard';
+import UploadAnkiDeck from './UploadAnkiDeck';
 import type { Deck } from '../../types/Deck';
 
 export type DeckListProps = {
@@ -36,13 +37,16 @@ const DeckList: React.FC<DeckListProps> = ({
       {/* Header */}
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-3xl font-bold text-gray-900">Your Decks</h1>
-        <button
-          onClick={onCreateDeck}
-          className="bg-purple-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-purple-700 transition-colors font-medium"
-        >
-          <Plus size={20} />
-          Create Deck
-        </button>
+        <div className="flex gap-3">
+          <UploadAnkiDeck onUploadSuccess={onCreateDeck} />
+          <button
+            onClick={onCreateDeck}
+            className="bg-purple-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-purple-700 transition-colors font-medium"
+          >
+            <Plus size={20} />
+            Create Deck
+          </button>
+        </div>
       </div>
 
       {/* Deck Cards Grid with entrance animation */}
