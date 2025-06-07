@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import type { Card, BasicCard, MCCard } from '../../types/Card';
+import type { Card } from '../../types/Card';
 import { authTokenManager } from '../../util/AuthTokenManager';
 
 const API_URL = import.meta.env.VITE_API_URL;
