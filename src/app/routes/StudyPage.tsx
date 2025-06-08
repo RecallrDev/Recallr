@@ -3,7 +3,7 @@ import React from 'react';
 import { useParams, Navigate } from 'react-router-dom';
 import StudySession from '../../features/study/StudySession';
 import { useDecks } from '../hooks/useDecks';
-import { useStudySession } from '../hooks/useStudySession';
+import { useCards } from '../hooks/useCards';
 import { authTokenManager } from '../../util/AuthTokenManager';
 
 const API_URL = import.meta.env.VITE_API_URL;
@@ -11,7 +11,7 @@ const API_URL = import.meta.env.VITE_API_URL;
 const StudyPage: React.FC = () => {
   const { deckId } = useParams<{ deckId: string }>();
   const { decks, isLoading: decksLoading, error: decksError, refetch: refetchDecks } = useDecks();
-  const { studyCards, isLoading, error } = useStudySession(deckId || '');
+  const { studyCards, isLoading, error } = useCards(deckId || '');
   const [currentCardIndex, setCurrentCardIndex] = React.useState(0);
   const [showAnswer, setShowAnswer] = React.useState(false);
 

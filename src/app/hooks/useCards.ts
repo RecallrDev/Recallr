@@ -1,22 +1,22 @@
 import { useState, useEffect, useCallback } from 'react';
-import type { Card, BasicCard, MCCard } from '../../types/Card';
+import type { Card } from '../../types/Card';
 import { authTokenManager } from '../../util/AuthTokenManager';
 
 const API_URL = import.meta.env.VITE_API_URL;
 
-type UseStudySessionResult = {
+type UseCardsResult = {
   studyCards: Card[];
   isLoading: boolean;
   error: Error | null;
   refetch: () => Promise<void>;
 };
 
-export function useStudySession(deckId: string | null): UseStudySessionResult {
+export function useCards(deckId: string | null, shuffle: boolean = true): UseCardsResult {
   const [studyCards, setStudyCards] = useState<Card[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<Error | null>(null);
 
-  const fetchCards = useCallback(async () => {
+  const fetchCards = useCallback(async (shuffleParam?: boolean) => {
     if (!deckId) {
       setStudyCards([]);
       return;
@@ -32,8 +32,9 @@ export function useStudySession(deckId: string | null): UseStudySessionResult {
       }
 
       const headers = await authTokenManager.getAuthHeaders();
+      const shouldShuffle = shuffleParam !== undefined ? shuffleParam : shuffle;
       const response = await fetch(
-        `${API_URL}/cards?deck_id=${deckId}&shuffle=true`,
+        `${API_URL}/cards?deck_id=${deckId}&shuffle=${shouldShuffle}`,
         {
           method: "GET",
           headers,
@@ -48,15 +49,17 @@ export function useStudySession(deckId: string | null): UseStudySessionResult {
       const cards: Card[] = await response.json();
       setStudyCards(cards);
     } catch (e: any) {
-      console.error("useStudySession error:", e);
+      console.error("useCards error:", e);
       setError(e instanceof Error ? e : new Error(String(e)));
       setStudyCards([]);
     } finally {
       setIsLoading(false);
     }
-  }, [deckId]);
+  }, [deckId, shuffle]);
+  const refetch = useCallback(async () => {
+    await fetchCards();
+  }, [fetchCards]);
 
-  // Only call fetchCards when deckId actually becomes a real value:
   useEffect(() => {
     if (deckId) {
       fetchCards();
@@ -65,5 +68,5 @@ export function useStudySession(deckId: string | null): UseStudySessionResult {
     }
   }, [deckId, fetchCards]);
 
-  return { studyCards, isLoading, error, refetch: fetchCards };
+  return { studyCards, isLoading, error, refetch };
 }
