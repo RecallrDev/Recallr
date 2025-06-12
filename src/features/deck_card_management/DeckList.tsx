@@ -2,7 +2,7 @@ import React from 'react';
 import { Plus } from 'lucide-react';
 import { motion } from 'framer-motion';
 import DeckCard from './DeckCard';
-import UploadAnkiDeck from './UploadAnkiDeck';
+import UploadAnkiDeck from './upload/UploadAnkiDeck';
 import type { Deck } from '../../types/Deck';
 
 export type DeckListProps = {
