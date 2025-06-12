@@ -20,7 +20,7 @@ const UploadAnkiDeck: React.FC<UploadAnkiDeckProps> = ({ onUploadSuccess }) => {
           hover:bg-purple-700 transition-colors font-medium"
       >
         <Upload size={20} />
-        Upload
+        
       </button>
 
       <UploadModal

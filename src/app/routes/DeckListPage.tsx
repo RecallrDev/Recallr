@@ -1,6 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import DeckList from '../../features/deck_card_management/DeckList';
+import UploadAnkiDeck from '../../features/deck_card_management/upload/UploadAnkiDeck';
 import { useDecks } from '../hooks/useDecks';
 import type { Deck } from '../../types/Deck';
 
@@ -43,12 +44,15 @@ const DeckListPage: React.FC = () => {
         <p className="text-gray-600 mb-6">
           You don’t have any decks yet. Create your first deck to get started!
         </p>
-        <button
-          onClick={handleCreateDeck}
-          className="bg-purple-600 text-white px-6 py-2 rounded-lg hover:bg-purple-700 transition-colors font-medium"
-        >
-          + Create New Deck
-        </button>
+        <div className="flex gap-3 justify-center">
+          <UploadAnkiDeck onUploadSuccess={handleCreateDeck} />
+          <button
+            onClick={handleCreateDeck}
+            className="bg-purple-600 text-white px-6 py-2 rounded-lg hover:bg-purple-700 transition-colors font-medium"
+          >
+            + Create New Deck
+          </button>
+        </div>
       </div>
     );
   }
