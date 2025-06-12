@@ -3,8 +3,8 @@ import React, { useState } from 'react';
 import { ArrowLeft } from 'lucide-react';
 import { authTokenManager } from '../../util/AuthTokenManager';
 import ConfirmDeckDeletionModal from './ConfirmDeckDeletionModal';
-import { useCards } from '../../app/hooks/useCards'      // ← new
-import CardsView from './CardsView';                     // ← new
+import { useCards } from '../../app/hooks/useCards'
+import CardsView from './CardsView';
 import type { Deck } from '../../types/Deck';
 import type { Card } from '../../types/Card';
 
@@ -240,11 +240,17 @@ const { studyCards, isLoading, error, refetch } = useCards(deck.id, false);
         </button>
       </div>
 
-      {/* ↓↓↓ RENDER THE LIST OF CARDS HERE ↓↓↓ */}
       <CardsView
         deck={deck}
         cards={studyCards}
         isLoading={isLoading}
+        onEditCard={(card) => {
+          console.log('Edit card:', card);
+        }}
+        onDeleteCard={(cardId) => {
+          console.log('Delete card:', cardId);
+        }}
+        onAddCard={onAddCard}
       />
     </div>
   );
