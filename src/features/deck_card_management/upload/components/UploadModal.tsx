@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, AlertCircle, CheckCircle } from 'lucide-react';
+import { X, AlertCircle, CheckCircle, Loader2 } from 'lucide-react';
 import { authTokenManager } from '../../../../util/AuthTokenManager';
 import { BetaWarning } from './BetaWarning';
 import { DragDropZone } from './DragDropZone';
@@ -133,19 +133,27 @@ export const UploadModal: React.FC<UploadModalProps> = ({ isOpen, onClose, onUpl
           <button
             onClick={onClose}
             className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
+            disabled={isUploading}
           >
             Cancel
           </button>
           <button
             onClick={handleFileUpload}
             disabled={!file || isUploading || !hasConfirmedOwnership}
-            className={`px-4 py-2 rounded-lg text-white font-medium transition-colors ${
+            className={`px-4 py-2 rounded-lg text-white font-medium transition-colors flex items-center gap-2 ${
               !file || isUploading || !hasConfirmedOwnership
                 ? 'bg-purple-400 cursor-not-allowed'
                 : 'bg-purple-600 hover:bg-purple-700'
             }`}
           >
-            {isUploading ? 'Uploading...' : 'Upload Deck'}
+            {isUploading ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                Uploading...
+              </>
+            ) : (
+              'Upload Deck'
+            )}
           </button>
         </div>
       </div>
