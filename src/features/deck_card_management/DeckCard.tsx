@@ -1,5 +1,5 @@
 import React from 'react';
-import { Play, Edit, Plus } from 'lucide-react';
+import { Play, Edit, Plus, Download } from 'lucide-react';
 import type { Deck } from '../../types/Deck';
 
 export type DeckCardProps = {
@@ -27,13 +27,24 @@ const DeckCard: React.FC<DeckCardProps> = ({ deck, onStudy, onEdit }) => {
         className="px-6 py-4 text-white"
         style={{ backgroundColor: deck.color }}
       >
-        <h3 className="text-xl font-bold">{deck.name}</h3>
+        <div className="flex justify-between items-center">
+          <h3 className="text-xl font-bold">{deck.name}</h3>
+        </div>
       </div>
 
       {/* Card content */}
       <div className="p-6">
-        <div className="mb-4">
-          <p className="text-sm text-gray-500 mb-3">{deck.category}</p>
+        <div className="mb-4 flex items-center justify-between">
+          <p className="text-sm text-gray-500">{deck.category}</p>
+
+          {deck.isImported && (
+            <div className="group relative">
+              <Download className="w-3 h-3" color={deck.color} />
+              <div className="absolute right-0 top-full mt-1 px-2 py-1 bg-gray-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+                Imported Deck
+              </div>
+            </div>
+          )}
         </div>
 
         <div className="space-y-2 mb-6">

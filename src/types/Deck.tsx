@@ -7,4 +7,5 @@ export type Deck = {
   last_studied?: string;
   created_at: string;
   cardCount: number;
+  isImported?: boolean;
 };
