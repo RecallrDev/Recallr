@@ -1,7 +1,12 @@
+// src/components/EditDeck.tsx
 import React, { useState } from 'react';
 import { ArrowLeft } from 'lucide-react';
 import { authTokenManager } from '../../util/AuthTokenManager';
 import ConfirmDeckDeletionModal from './ConfirmDeckDeletionModal';
+import { useCards } from '../../app/hooks/useCards'
+import CardsView from './CardsView';
+import type { Deck } from '../../types/Deck';
+import type { Card } from '../../types/Card';
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -24,24 +29,28 @@ const colorOptions = [
 ];
 
 export type EditDeckProps = {
-  deck: {
-    id: string;
-    name: string;
-    category: string;
-    color: string;
-  };
+  deck: Deck;
   onCancel: () => void;
   onUpdateSuccess: () => void;
   onAddCard: () => void;
   onDeleteSuccess: () => void;
 };
 
-const EditDeck: React.FC<EditDeckProps> = ({ deck, onCancel, onUpdateSuccess, onAddCard, onDeleteSuccess }) => {
+const EditDeck: React.FC<EditDeckProps> = ({
+  deck,
+  onCancel,
+  onUpdateSuccess,
+  onAddCard,
+  onDeleteSuccess,
+}) => {
   const [deckName, setDeckName] = useState(deck.name);
   const [category, setCategory] = useState(deck.category);
   const [color, setColor] = useState(deck.color);
   const [loading, setLoading] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+
+  // FETCH CARDS (no shuffle)
+const { studyCards, isLoading, error, refetch } = useCards(deck.id, false);
 
   const handleUpdateDeck = async () => {
     setLoading(true);
@@ -60,7 +69,7 @@ const EditDeck: React.FC<EditDeckProps> = ({ deck, onCancel, onUpdateSuccess, on
         body: JSON.stringify({
           name: deckName.trim(),
           category,
-          color
+          color,
         }),
       });
 
@@ -69,8 +78,9 @@ const EditDeck: React.FC<EditDeckProps> = ({ deck, onCancel, onUpdateSuccess, on
         throw new Error(errText || 'Failed to update deck');
       }
 
-      // Optionally, you can parse the returned deck, but all you need is to notify parent.
       onUpdateSuccess();
+      // Optionally: after a successful update, re-fetch the cards if necessary
+      // await refetch();
     } catch (err: any) {
       console.error('Error updating deck via Python backend:', err);
     } finally {
@@ -83,18 +93,19 @@ const EditDeck: React.FC<EditDeckProps> = ({ deck, onCancel, onUpdateSuccess, on
     if (!token) return;
     const headers = await authTokenManager.getAuthHeaders();
 
-    const response = await fetch(`${API_URL}/decks/${deck.id}`, {
-      method: 'DELETE',
-      headers,
-    });
-
-    if (!response.ok) {
-      const errText = await response.text();
-      throw new Error(errText || 'Failed to delete deck');
+    try {
+      const response = await fetch(`${API_URL}/decks/${deck.id}`, {
+        method: 'DELETE',
+        headers,
+      });
+      if (!response.ok) {
+        const errText = await response.text();
+        throw new Error(errText || 'Failed to delete deck');
+      }
+      onDeleteSuccess();
+    } catch (err: any) {
+      console.error('Error deleting deck:', err);
     }
-
-    // Notify parent component about successful deletion
-    onDeleteSuccess();
   };
 
   return (
@@ -228,6 +239,19 @@ const EditDeck: React.FC<EditDeckProps> = ({ deck, onCancel, onUpdateSuccess, on
           + Add Card
         </button>
       </div>
+
+      <CardsView
+        deck={deck}
+        cards={studyCards}
+        isLoading={isLoading}
+        onEditCard={(card) => {
+          console.log('Edit card:', card);
+        }}
+        onDeleteCard={(cardId) => {
+          console.log('Delete card:', cardId);
+        }}
+        onAddCard={onAddCard}
+      />
     </div>
   );
 };
