@@ -5,6 +5,8 @@ export type BasicCard = {
   back: string;
   created_at: string;
   type: 'basic';
+  front_image?: string; // Optional field, can be null
+  back_image?: string; // Optional field, can be null
 };
 
 export type MCChoice = {
@@ -20,6 +22,7 @@ export type MultipleChoiceCard = {
   created_at: string;
   choices: MCChoice[];
   type: 'multiple_choice';
+  front_image?: string; // Optional field, can be null
 };
 
 export type Card = BasicCard | MultipleChoiceCard;
