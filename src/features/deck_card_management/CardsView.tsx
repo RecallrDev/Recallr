@@ -64,7 +64,7 @@ const CardsView: React.FC<CardsViewProps> = ({
         <div className="mt-4">
           <button
             onClick={onAddCard}
-            className="inline-flex items-center gap-2 px-4 py-2 text-sm text-white bg-green-600 hover:bg-green-700 rounded-md transition-all font-medium"
+            className="inline-flex items-center gap-2 px-4 py-2 text-sm bg-purple-600 text-white hover:scale-105 rounded-md transition-all font-medium"
           >
             <Plus size={16} />
             Add Card
