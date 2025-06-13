@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Plus, Sparkles } from 'lucide-react';
 import { motion } from 'framer-motion';
 import DeckCard from './DeckCard';
 import UploadAnkiDeck from '../../upload_management/UploadAnkiDeck';
+import AIGenerationModal from '../../ai_generation/components/AIGenerationModal'; // ← Import hinzugefügt
 import type { Deck } from '../types/Deck';
 
 export type DeckListProps = {
@@ -10,6 +11,7 @@ export type DeckListProps = {
   onCreateDeck: () => void;
   onStudyDeck: (deck: Deck) => void;
   onEditDeck: (deck: Deck) => void;
+  onDeckRefresh?: () => void; // ← Optional: für Refresh nach AI-Generation
 };
 
 const containerVariants = {
@@ -40,7 +42,47 @@ const DeckList: React.FC<DeckListProps> = ({
   onCreateDeck,
   onStudyDeck,
   onEditDeck,
+  onDeckRefresh,
 }) => {
+  // SINGLE Modal State für ALLE DeckCards
+  const [aiModalOpen, setAiModalOpen] = useState(false);
+  const [selectedDeck, setSelectedDeck] = useState<{id: string, name: string} | null>(null);
+
+  // Event Handler für AI Generation Button
+  const handleAIGenerationClick = (deckId: string, deckName: string) => {
+    console.log('🤖 Opening AI Modal for:', deckName);
+    setSelectedDeck({ id: deckId, name: deckName });
+    setAiModalOpen(true);
+  };
+
+  // Modal schließen
+  const handleAIModalClose = () => {
+    setAiModalOpen(false);
+    setSelectedDeck(null);
+  };
+
+  // Success Handler
+  const handleAISuccess = (newDeckId: string) => {
+    console.log('✅ AI Generation successful:', newDeckId);
+    setAiModalOpen(false);
+    setSelectedDeck(null);
+    
+    // Optional: Deck-Liste neu laden
+    if (onDeckRefresh) {
+      onDeckRefresh();
+    }
+    
+    // Optional: Zur neuen Deck navigieren
+    // navigate(`/decks/${newDeckId}`);
+  };
+
+  // AI Generation Success für einzelne DeckCards
+  const handleDeckAISuccess = (deckId: string) => {
+    if (onDeckRefresh) {
+      onDeckRefresh();
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
       <div className="max-w-7xl mx-auto px-6 py-8">
@@ -85,6 +127,8 @@ const DeckList: React.FC<DeckListProps> = ({
                   deck={deck}
                   onStudy={onStudyDeck}
                   onEdit={onEditDeck}
+                  onAIGenerationClick={handleAIGenerationClick} // ← Neues Event
+                  onAIGenerationSuccess={handleDeckAISuccess}
                 />
               </motion.div>
             ))}
@@ -122,6 +166,17 @@ const DeckList: React.FC<DeckListProps> = ({
           </motion.div>
         )}
       </div>
+
+      {/* SINGLE Modal für ALLE DeckCards */}
+      {selectedDeck && (
+        <AIGenerationModal
+          isOpen={aiModalOpen}
+          onClose={handleAIModalClose}
+          sourceDeckId={selectedDeck.id}
+          sourceDeckName={selectedDeck.name}
+          onSuccess={handleAISuccess}
+        />
+      )}
     </div>
   );
 };
