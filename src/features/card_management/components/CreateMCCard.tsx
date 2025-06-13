@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
-import { Plus, X } from 'lucide-react';
+import { Plus, X, Image } from 'lucide-react';
 import { authTokenManager } from '../../../util/AuthTokenManager';
+import { ImageUploadModal } from '../../card_image_upload';
+import { type ImageUploadResult } from '../../card_image_upload';
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -34,6 +36,28 @@ const CreateMultipleChoiceCard: React.FC<CreateMCProps> = ({
   );
 
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showUploadModal, setShowUploadModal] = useState(false);
+
+  // Image states (MC cards only have one image for the question)
+  const [questionImage, setQuestionImage] = useState<string | null>(null);
+  const [questionThumbnail, setQuestionThumbnail] = useState<string | null>(null);
+
+    const handleImageUpload = (result: ImageUploadResult, location: 'front' | 'back') => {
+    const fullUrl = `${import.meta.env.VITE_API_URL || 'http://localhost:8000'}${result.url}`;
+    const thumbnailUrl = result.thumbnail_url 
+      ? `${import.meta.env.VITE_API_URL || 'http://localhost:8000'}${result.thumbnail_url}`
+      : fullUrl;
+
+    setQuestionImage(fullUrl);
+    setQuestionThumbnail(thumbnailUrl);
+    setShowUploadModal(false);
+  };
+
+  const removeImage = () => {
+    setQuestionImage(null);
+    setQuestionThumbnail(null);
+  };
+
 
   const handleChoiceTextChange = (index: number, newText: string) => {
     const updated = [...choices];
@@ -96,6 +120,7 @@ const CreateMultipleChoiceCard: React.FC<CreateMCProps> = ({
         deck_id: deckId,
         created_at: new Date().toISOString(),
         type: 'multiple_choice',
+        front_image: questionImage,
         question: question.trim(),
         choices: filledChoices.map((c) => ({
           answer_text: c.text.trim(),
@@ -122,6 +147,8 @@ const CreateMultipleChoiceCard: React.FC<CreateMCProps> = ({
         { text: '', is_correct: false }
       ]
     );
+    setQuestionImage(null);
+    setQuestionThumbnail(null);
     setIsSubmitting(false);
 
     // 6) Notify parent to re‐fetch deck
@@ -143,6 +170,28 @@ const CreateMultipleChoiceCard: React.FC<CreateMCProps> = ({
             rows={3}
           />
         </div>
+
+        {/* Question Image Preview */}
+        {questionThumbnail && (
+          <div className="relative">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Question Image
+            </label>
+            <div className="relative inline-block">
+              <img 
+                src={questionThumbnail} 
+                alt="Question preview" 
+                className="h-24 w-auto rounded-lg border border-gray-200"
+              />
+              <button
+                onClick={removeImage}
+                className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 transition-colors"
+              >
+                <X size={14} />
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Answers Section */}
         <div>
@@ -198,18 +247,18 @@ const CreateMultipleChoiceCard: React.FC<CreateMCProps> = ({
           </p>
         </div>
 
-        {/* Actions */}
+         {/* Actions */}
         <div className="flex gap-3 pt-2">
           <button
             onClick={handleCreateMC}
             style={{ backgroundColor: deckColor || '#3B82F6' }}
             disabled={
-              !question.trim() ||
+              (!question.trim() && !questionImage) ||
               choices.filter((c) => c.text.trim() !== '').length < 2 ||
-              !choices.filter((c) => c.text.trim() !== '').some((c) => c.is_correct) ||
+              !choices.some((c) => c.is_correct && c.text.trim() !== '') ||
               isSubmitting
             }
-            className="text-white px-6 py-2 rounded-lg hover:scale-105 transition-all font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+            className="text-white px-6 py-2 rounded-lg hover:scale-105 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isSubmitting ? 'Saving…' : 'Create MC Card'}
           </button>
@@ -219,7 +268,24 @@ const CreateMultipleChoiceCard: React.FC<CreateMCProps> = ({
           >
             Cancel
           </button>
+          <button
+            onClick={() => setShowUploadModal(true)}
+            style={{ backgroundColor: deckColor || '#3B82F6' }}
+            disabled={isSubmitting}
+            className="text-white px-6 py-2 rounded-lg hover:scale-105 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed ml-auto"
+          >
+            <Image className="inline-block" size={20} />
+          </button>
         </div>
+
+        {/* Upload Image Modal */}
+        {showUploadModal && (
+          <ImageUploadModal
+            cardType="mc"
+            onCancel={() => setShowUploadModal(false)}
+            onUpload={handleImageUpload}
+          />
+        )}
       </div>
     </div>
   );
