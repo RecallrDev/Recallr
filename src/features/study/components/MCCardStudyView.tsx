@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
-import type { MultipleChoiceCard } from '../../../types/Card';
+import type { MultipleChoiceCard } from '../../card_management';
 
 const MCCardStudyView: React.FC<{
   card: MultipleChoiceCard;
@@ -22,6 +22,12 @@ const MCCardStudyView: React.FC<{
     );
   };
 
+  const [isImageExpanded, setIsImageExpanded] = useState(false);
+
+  const toggleImageSize = () => {
+    setIsImageExpanded((prev) => !prev);
+  };
+
   return (
     <motion.div
       initial={isFirstRender.current ? { opacity: 1, y: 0 } : { opacity: 0, y: 12 }}
@@ -37,6 +43,23 @@ const MCCardStudyView: React.FC<{
         <div className="text-lg font-semibold text-gray-800">
           {card.question}
         </div>
+
+        {card.front_image && (
+        <div className="flex justify-center">
+          <div className={`transition-all duration-300 cursor-pointer ${isImageExpanded ? 'w-full max-w-4xl' : 'w-full max-w-md'}`}>
+            <img
+              src={card.front_image}
+              alt="Front side image"
+              loading="lazy"
+              onClick={toggleImageSize}
+              className={`w-full h-auto rounded-lg shadow-sm transition-transform duration-300 ${
+                isImageExpanded ? 'scale-110' : 'scale-100'
+              }`}
+              style={{ border: `2px solid ${deckColor}` }}
+            />
+          </div>
+        </div>
+      )}
 
         {/* Choices */}
         <div className="space-y-3 flex-1 overflow-y-auto overflow-x-hidden">
