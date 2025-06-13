@@ -18,26 +18,39 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let mounted = true;
+
     // Anfängliche Session laden
     const getInitialSession = async () => {
       try {
         setLoading(true);
         
-        // Aktuelle Session abrufen
         const { data: { session }, error } = await supabase.auth.getSession();
         
         if (error) {
-          throw error;
+          console.error('Fehler beim Laden der Session:', error);
+          // Bei Fehlern Session auf null setzen
+          if (mounted) {
+            setSession(null);
+            setUser(null);
+          }
+          return;
         }
         
-        if (session) {
+        if (mounted) {
           setSession(session);
-          setUser(session.user);
+          setUser(session?.user ?? null);
         }
       } catch (error) {
-        console.error('Fehler beim Laden der Session:', error);
+        console.error('Unerwarteter Fehler beim Laden der Session:', error);
+        if (mounted) {
+          setSession(null);
+          setUser(null);
+        }
       } finally {
-        setLoading(false);
+        if (mounted) {
+          setLoading(false);
+        }
       }
     };
 
@@ -45,15 +58,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     // Auth-Änderungen abonnieren
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
+      async (event, session) => {
+        if (!mounted) return;
+
+        console.log('Auth state changed:', event, session?.user?.email || 'no user');
+        
         setSession(session);
         setUser(session?.user ?? null);
         setLoading(false);
+
+        // Bei explizitem Logout localStorage räumen
+        if (event === 'SIGNED_OUT') {
+          localStorage.removeItem('rememberedEmail');
+        }
       }
     );
 
     // Cleanup-Funktion
     return () => {
+      mounted = false;
       subscription.unsubscribe();
     };
   }, []);
@@ -62,36 +85,49 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const refreshSession = async () => {
     try {
       setLoading(true);
-      const { data: { session }, error } = await supabase.auth.getSession();
+      const { data: { session }, error } = await supabase.auth.refreshSession();
       
       if (error) {
-        throw error;
+        console.error('Fehler beim Aktualisieren der Session:', error);
+        // Bei Refresh-Fehlern Session zurücksetzen
+        setSession(null);
+        setUser(null);
+        return;
       }
       
-      if (session) {
-        setSession(session);
-        setUser(session.user);
-      }
+      setSession(session);
+      setUser(session?.user ?? null);
     } catch (error) {
-      console.error('Fehler beim Aktualisieren der Session:', error);
+      console.error('Unerwarteter Fehler beim Aktualisieren der Session:', error);
+      setSession(null);
+      setUser(null);
     } finally {
       setLoading(false);
     }
   };
 
-  // Abmelden
+  // Abmelden - WICHTIG: State immer zurücksetzen, auch bei Fehlern
   const signOut = async () => {
     try {
+      setLoading(true);
+      
       const { error } = await supabase.auth.signOut();
       
       if (error) {
-        throw error;
+        console.error('Fehler beim Abmelden:', error);
+        // Trotz Fehler lokale Session zurücksetzen
       }
       
+    } catch (error) {
+      console.error('Unerwarteter Fehler beim Abmelden:', error);
+    } finally {
+      // State IMMER zurücksetzen, auch bei Fehlern
       setSession(null);
       setUser(null);
-    } catch (error) {
-      console.error('Fehler beim Abmelden:', error);
+      setLoading(false);
+      
+      // Auch localStorage räumen
+      localStorage.removeItem('rememberedEmail');
     }
   };
 
