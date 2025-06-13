@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { X, AlertCircle, CheckCircle, Loader2 } from 'lucide-react';
-import { authTokenManager } from '../../../../util/AuthTokenManager';
+import { authTokenManager } from '../../../util/AuthTokenManager';
 import { BetaWarning } from './BetaWarning';
 import { DragDropZone } from './DragDropZone';
 import type { UploadModalProps } from '../types/upload';

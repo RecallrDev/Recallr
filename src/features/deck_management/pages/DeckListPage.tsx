@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import UploadAnkiDeck from '../upload/UploadAnkiDeck';
+import UploadAnkiDeck from '../../upload_management/UploadAnkiDeck';
 import DeckList from '../components/DeckList';
 import { useDecks } from '../hooks/useDecks';
 import type { Deck } from '../types/Deck';
