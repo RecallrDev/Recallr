@@ -16,8 +16,7 @@ const UploadAnkiDeck: React.FC<UploadAnkiDeckProps> = ({ onUploadSuccess }) => {
     <>
       <button
         onClick={() => setIsModalOpen(true)}
-        className="bg-purple-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 
-          hover:bg-purple-700 transition-colors font-medium"
+        className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-xl flex items-center gap-2 font-semibold transition-all duration-200 hover:scale-105 active:scale-95 shadow-lg hover:shadow-xl"
       >
         <Upload size={20} />
         
