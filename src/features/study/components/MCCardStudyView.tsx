@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { useState, useEffect } from 'react';
-import type { MultipleChoiceCard } from '../../../types/Card';
+import type { MultipleChoiceCard } from '../../card_management/types/Card';
 
 const MCCardStudyView: React.FC<{
   card: MultipleChoiceCard;

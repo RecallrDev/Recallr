@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import type { BasicCard } from '../../../types/Card';
+import type { BasicCard } from '../../card_management/types/Card';
 
 const BasicCardStudyView: React.FC<{
   card: BasicCard;

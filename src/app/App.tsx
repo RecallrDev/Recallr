@@ -1,20 +1,17 @@
 import React, { useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import Navbar from '../components/navigation/Navbar';
-import Footer from '../components/navigation/Footer';
-import ProfilePage from './routes/ProfilePage';
 import AuthCallback from '../features/authentification/AuthCallback';
-import HomePage from './routes/HomePage';
 import ResetPasswordPage from '../features/authentification/ResetPasswordPage';
-import StudyPage from './routes/StudyPage';
 import AuthModal from '../features/authentification/AuthModal';
 import { AuthProvider } from '../features/authentification/AuthContext';
 import ProtectedRoute from '../features/authentification/ProtectedRoute';
 
-import DeckListPage from './routes/DeckListPage';
-import CreateDeckPage from './routes/CreateDeckPage';
-import EditDeckPage from './routes/EditDeckPage';
-import CreateCardPage from './routes/CreateCardPage';
+import { HomePage } from '../features/homepage';
+import { Navbar, Footer } from './shared';
+import { DeckListPage, CreateDeckPage, EditDeckPage } from '../features/deck_management';
+import { CreateCardPage } from '../features/card_management';
+import { ProfilePage } from '../features/profile';
+import { StudyPage } from '../features/study';
 
 import '../index.css';
 
