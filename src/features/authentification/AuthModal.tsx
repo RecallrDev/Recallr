@@ -60,6 +60,11 @@ const AuthModal: React.FC<AuthModalProps> = ({
     setConfirmPassword('');
   };
 
+  // Validate email format
+  const isValidEmail = (email: string) => {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  };
+
   // Handle sign in with Supabase
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -68,13 +73,18 @@ const AuthModal: React.FC<AuthModalProps> = ({
       setErrorMessage('Please enter your email and password');
       return;
     }
+
+    if (!isValidEmail(email)) {
+      setErrorMessage('Please enter a valid email address');
+      return;
+    }
     
     try {
       setLoading(true);
       setErrorMessage('');
       
       const { data, error } = await supabase.auth.signInWithPassword({
-        email,
+        email: email.trim().toLowerCase(),
         password,
       });
 
@@ -85,7 +95,7 @@ const AuthModal: React.FC<AuthModalProps> = ({
       if (data?.user) {
         // E-Mail speichern oder entfernen basierend auf "Remember me"
         if (rememberMe) {
-          localStorage.setItem('rememberedEmail', email);
+          localStorage.setItem('rememberedEmail', email.trim().toLowerCase());
         } else {
           localStorage.removeItem('rememberedEmail');
         }
@@ -102,11 +112,13 @@ const AuthModal: React.FC<AuthModalProps> = ({
       console.error('Login error:', error);
       
       // Bessere Fehlerbehandlung
-      let errorMsg = 'Login error';
+      let errorMsg = 'Login failed. Please try again.';
       if (error.message.includes('Invalid login credentials')) {
         errorMsg = 'Invalid email or password';
       } else if (error.message.includes('Email not confirmed')) {
         errorMsg = 'Please confirm your email address first';
+      } else if (error.message.includes('Too many requests')) {
+        errorMsg = 'Too many login attempts. Please wait a moment.';
       } else if (error.message) {
         errorMsg = error.message;
       }
@@ -126,6 +138,11 @@ const AuthModal: React.FC<AuthModalProps> = ({
       return;
     }
 
+    if (!isValidEmail(email)) {
+      setErrorMessage('Please enter a valid email address');
+      return;
+    }
+
     if (password !== confirmPassword) {
       setErrorMessage('Passwords do not match');
       return;
@@ -135,6 +152,11 @@ const AuthModal: React.FC<AuthModalProps> = ({
       setErrorMessage('Password must be at least 6 characters long');
       return;
     }
+
+    if (name.trim().length < 2) {
+      setErrorMessage('Name must be at least 2 characters long');
+      return;
+    }
     
     try {
       setLoading(true);
@@ -142,11 +164,11 @@ const AuthModal: React.FC<AuthModalProps> = ({
       
       // 1. Benutzer registrieren
       const { data: authData, error: authError } = await supabase.auth.signUp({
-        email,
+        email: email.trim().toLowerCase(),
         password,
         options: {
           data: {
-            full_name: name,
+            full_name: name.trim(),
           },
           emailRedirectTo: config.redirectUrls.authCallback,
         },
@@ -170,15 +192,23 @@ const AuthModal: React.FC<AuthModalProps> = ({
         }
 
         // Erfolgreich registriert
-        setSuccessMessage('Registration successful! Please confirm your email address.');
+        setSuccessMessage('Registration successful! Please check your email to confirm your account.');
+        
+        // Felder zurücksetzen nach erfolgreicher Registrierung
+        setEmail('');
+        setPassword('');
+        setConfirmPassword('');
+        setName('');
       }
     } catch (error: any) {
       console.error('Registration error:', error.message);
       
       // Bessere Fehlerbehandlung
-      let errorMsg = 'Registration error';
+      let errorMsg = 'Registration failed. Please try again.';
       if (error.message.includes('User already registered')) {
         errorMsg = 'An account with this email already exists. Please log in.';
+      } else if (error.message.includes('Password should be at least 6 characters')) {
+        errorMsg = 'Password must be at least 6 characters long';
       } else if (error.message) {
         errorMsg = error.message;
       }
@@ -277,6 +307,7 @@ const AuthModal: React.FC<AuthModalProps> = ({
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       required
+                      autoComplete="email"
                     />
                   </div>
                 </div>
@@ -295,6 +326,7 @@ const AuthModal: React.FC<AuthModalProps> = ({
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       required
+                      autoComplete="current-password"
                     />
                   </div>
                 </div>
@@ -327,7 +359,7 @@ const AuthModal: React.FC<AuthModalProps> = ({
                 
                 <button
                   type="submit"
-                  className="w-full py-3 px-4 border border-transparent rounded-xl shadow-sm text-sm font-medium text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 transition"
+                  className="w-full py-3 px-4 border border-transparent rounded-xl shadow-sm text-sm font-medium text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 transition disabled:opacity-50 disabled:cursor-not-allowed"
                   disabled={loading}
                 >
                   {loading ? 'Signing in...' : 'Sign in'}
@@ -396,6 +428,7 @@ const AuthModal: React.FC<AuthModalProps> = ({
                       value={name}
                       onChange={(e) => setName(e.target.value)}
                       required
+                      autoComplete="name"
                     />
                   </div>
                 </div>
@@ -414,6 +447,7 @@ const AuthModal: React.FC<AuthModalProps> = ({
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       required
+                      autoComplete="email"
                     />
                   </div>
                 </div>
@@ -433,6 +467,7 @@ const AuthModal: React.FC<AuthModalProps> = ({
                       onChange={(e) => setPassword(e.target.value)}
                       required
                       minLength={6}
+                      autoComplete="new-password"
                     />
                   </div>
                 </div>
@@ -456,6 +491,7 @@ const AuthModal: React.FC<AuthModalProps> = ({
                       onChange={(e) => setConfirmPassword(e.target.value)}
                       required
                       minLength={6}
+                      autoComplete="new-password"
                     />
                   </div>
                   {confirmPassword && password !== confirmPassword && (
@@ -485,7 +521,7 @@ const AuthModal: React.FC<AuthModalProps> = ({
                 
                 <button
                   type="submit"
-                  className="w-full py-3 px-4 border border-transparent rounded-xl shadow-sm text-sm font-medium text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 transition disabled:bg-gray-400 disabled:cursor-not-allowed"
+                  className="w-full py-3 px-4 border border-transparent rounded-xl shadow-sm text-sm font-medium text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 transition disabled:opacity-50 disabled:cursor-not-allowed"
                   disabled={loading || (confirmPassword.length > 0 && password !== confirmPassword)}
                 >
                   {loading ? 'Creating account...' : 'Create account'}
