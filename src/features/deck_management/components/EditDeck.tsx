@@ -3,6 +3,7 @@ import { ArrowLeft, Plus } from 'lucide-react';
 import { authTokenManager } from '../../../util/AuthTokenManager';
 import ConfirmDeckDeletionModal from './ConfirmDeckDeletionModal';
 import DeckForm from './DeckForm';
+import DeckPublishSection from './DeckPublishSection';
 import { useCards } from '../../card_management/hooks/useCards';
 import CardsView from '../../card_management/components/CardsView';
 import type { Deck } from '../types/Deck';
@@ -27,6 +28,7 @@ const EditDeck: React.FC<EditDeckProps> = ({
   const [deckName, setDeckName] = useState(deck.name);
   const [category, setCategory] = useState(deck.category);
   const [color, setColor] = useState(deck.color);
+  const [isPublic, setIsPublic] = useState(deck.is_public || false);
   const [loading, setLoading] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
 
@@ -128,6 +130,13 @@ const EditDeck: React.FC<EditDeckProps> = ({
             setCategory={setCategory}
             color={color}
             setColor={setColor}
+          />
+
+          {/* Publish Section */}
+          <DeckPublishSection
+            deckId={deck.id}
+            isPublic={isPublic}
+            onPublishChange={setIsPublic}
           />
 
           {/* Actions */}
