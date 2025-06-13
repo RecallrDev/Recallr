@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { supabase } from '../../lib/supabase_client';
+import { supabase } from '../../../lib/supabase_client';
 import { CheckCircle, AlertCircle } from 'lucide-react';
-import { config } from '../../lib/config';
+import { config } from '../../../lib/config';
 
 const AuthCallback: React.FC = () => {
   const navigate = useNavigate();

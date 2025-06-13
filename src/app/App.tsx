@@ -1,10 +1,5 @@
 import React, { useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import AuthCallback from '../features/authentification/AuthCallback';
-import ResetPasswordPage from '../features/authentification/ResetPasswordPage';
-import AuthModal from '../features/authentification/AuthModal';
-import { AuthProvider } from '../features/authentification/AuthContext';
-import ProtectedRoute from '../features/authentification/ProtectedRoute';
 
 import { HomePage } from '../features/homepage';
 import { Navbar, Footer } from './shared';
@@ -12,6 +7,7 @@ import { DeckListPage, CreateDeckPage, EditDeckPage } from '../features/deck_man
 import { CreateCardPage } from '../features/card_management';
 import { ProfilePage } from '../features/profile';
 import { StudyPage } from '../features/study';
+import { ResetPasswordPage, AuthModal, AuthProvider, AuthCallback, ProtectedRoute } from '../features/authentification';
 
 import '../index.css';
 

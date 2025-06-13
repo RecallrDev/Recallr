@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Lock, CheckCircle, AlertCircle, Eye, EyeOff } from 'lucide-react';
-import { supabase } from '../../lib/supabase_client';
-import { config } from '../../lib/config';
+import { supabase } from '../../../lib/supabase_client';
+import { config } from '../../../lib/config';
 
 const ResetPasswordPage: React.FC = () => {
   const [password, setPassword] = useState('');

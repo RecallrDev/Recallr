@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { supabase } from '../../lib/supabase_client';
-import { config } from '../../lib/config';
+import { supabase } from '../../../lib/supabase_client';
+import { config } from '../../../lib/config';
 import type { Provider } from '@supabase/supabase-js';
 
 interface SocialLoginButtonsProps {
