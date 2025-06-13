@@ -68,12 +68,15 @@ const StudySession: React.FC<StudySessionProps> = ({
           card={currentCard as BasicCard}
           showAnswer={showAnswer}
           deckColor={deck.color}
+          frontImage={currentCard.front_image}
+          backImage={currentCard.back_image}
         />
       ) : (
         <MCCardStudyView
           card={currentCard as MultipleChoiceCard}
           showAnswer={showAnswer}
           deckColor={deck.color}
+          //frontImage={currentCard.front_image}
         />
       )}
 

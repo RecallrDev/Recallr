@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { supabase } from '../../../lib/supabase_client';
-import { Image, X } from 'lucide-react';
-import { type ImageUploadResult, ImageUploadModal } from '../../card_image_upload';
+import { Plus, X } from 'lucide-react';
+import { authTokenManager } from '../../../util/AuthTokenManager';
+
+const API_URL = import.meta.env.VITE_API_URL;
 
 export type CreateMCProps = {
   deckId: string;
@@ -11,7 +12,7 @@ export type CreateMCProps = {
 };
 
 type ChoiceInput = {
-  answer_text: string;
+  text: string;
   is_correct: boolean;
 };
 
@@ -24,37 +25,19 @@ const CreateMultipleChoiceCard: React.FC<CreateMCProps> = ({
   // 1) Track the question itself
   const [question, setQuestion] = useState('');
 
-  // 2) Track up to 5 answers
+  // 2) Start with 2 choices
   const [choices, setChoices] = useState<ChoiceInput[]>(
-    Array.from({ length: 5 }, () => ({ answer_text: '', is_correct: false }))
+    [
+      { text: '', is_correct: false },
+      { text: '', is_correct: false }
+    ]
   );
 
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [showUploadModal, setShowUploadModal] = useState(false);
-  
-  // Image states (MC cards only have one image for the question)
-  const [questionImage, setQuestionImage] = useState<string | null>(null);
-  const [questionThumbnail, setQuestionThumbnail] = useState<string | null>(null);
-
-  const handleImageUpload = (result: ImageUploadResult, location: 'front' | 'back') => {
-    const fullUrl = `${import.meta.env.VITE_API_URL || 'http://localhost:8000'}${result.url}`;
-    const thumbnailUrl = result.thumbnail_url 
-      ? `${import.meta.env.VITE_API_URL || 'http://localhost:8000'}${result.thumbnail_url}`
-      : fullUrl;
-
-    setQuestionImage(fullUrl);
-    setQuestionThumbnail(thumbnailUrl);
-    setShowUploadModal(false);
-  };
-
-  const removeImage = () => {
-    setQuestionImage(null);
-    setQuestionThumbnail(null);
-  };
 
   const handleChoiceTextChange = (index: number, newText: string) => {
     const updated = [...choices];
-    updated[index].answer_text = newText;
+    updated[index].text = newText;
     setChoices(updated);
   };
 
@@ -64,91 +47,85 @@ const CreateMultipleChoiceCard: React.FC<CreateMCProps> = ({
     setChoices(updated);
   };
 
+  const addChoice = () => {
+    if (choices.length < 10) {
+      setChoices([...choices, { text: '', is_correct: false }]);
+    }
+  };
+
+  const removeChoice = (index: number) => {
+    if (choices.length > 2) {
+      const updated = choices.filter((_, idx) => idx !== index);
+      setChoices(updated);
+    }
+  };
+
   const handleCreateMC = async () => {
     // 1) Basic validation: question must not be empty, at least two answers filled, at least one correct
-    if (!question.trim() && !questionImage) {
-      alert('Please add a question text or image');
+    if (!question.trim()) {
       return;
     }
-    
     // Count how many choice texts are non‐empty
-    const filledChoices = choices.filter((c) => c.answer_text.trim() !== '');
+    const filledChoices = choices.filter((c) => c.text.trim() !== '');
     if (filledChoices.length < 2) {
-      alert('Please provide at least 2 answer choices');
+      // require at least 2 answers
       return;
     }
-    
     // Must have at least one is_correct = true among the filled choices
     if (!filledChoices.some((c) => c.is_correct)) {
-      alert('Please mark at least one answer as correct');
       return;
     }
 
     setIsSubmitting(true);
 
-    try {
-      // 2) Get current user
-      const {
-        data: { user },
-        error: userError,
-      } = await supabase.auth.getUser();
-
-      if (userError || !user) {
-        console.error('You must be logged in to create a multiple choice card', userError);
-        return;
-      }
-
-      // 3) Insert into mc_cards
-      const { data: mcCardData, error: insertCardError } = await supabase
-        .from('mc_cards')
-        .insert({
-          deck_id: deckId,
-          user_id: user.id,
-          question: question.trim(),
-          front_image: questionImage,
-        })
-        .select()
-        .single();
-
-      if (insertCardError || !mcCardData) {
-        console.error('Error creating MC card:', insertCardError);
-        return;
-      }
-
-      const newMcCardId = mcCardData.id;
-
-      // 4) Insert each filled choice into mc_choices
-      const choicesToInsert = choices
-        .map((c) => ({
-          mc_card_id: newMcCardId,
-          answer_text: c.answer_text.trim(),
-          is_correct: c.is_correct,
-        }))
-        .filter((c) => c.answer_text !== '');
-
-      // Insert all non‐empty choices
-      const { error: insertChoicesError } = await supabase
-        .from('mc_choices')
-        .insert(choicesToInsert);
-
-      if (insertChoicesError) {
-        console.error('Error inserting MC choices:', insertChoicesError);
-        return;
-      }
-
-      // 5) Clear form
-      setQuestion('');
-      setChoices(Array.from({ length: 5 }, () => ({ answer_text: '', is_correct: false })));
-      setQuestionImage(null);
-      setQuestionThumbnail(null);
-
-      // 6) Notify parent to re‐fetch deck
-      onCreateSuccess();
-    } catch (error) {
-      console.error('Unexpected error:', error);
-    } finally {
+    // 2) Get current user
+    if (!(await authTokenManager.isAuthenticated())) {
       setIsSubmitting(false);
+      console.error('User is not authenticated');
+      return;
     }
+
+    // 3) Prepare headers
+    const headers = await authTokenManager.getAuthHeaders();
+
+    // 4) Insert into multiple_choice_cards - Fixed payload structure
+    const response = await fetch(`${API_URL}/cards`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({
+        deck_id: deckId,
+        created_at: new Date().toISOString(),
+        type: 'multiple_choice',
+        question: question.trim(),
+        choices: filledChoices.map((c) => ({
+          answer_text: c.text.trim(),
+          is_correct: c.is_correct,
+        })),
+      }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      const insertError = errorData.error || `HTTP error! Status: ${response.status}`;
+      console.error('Error creating MC card:', insertError);
+      setIsSubmitting(false);
+      return;
+    } else {
+      console.log('MC card created successfully');
+    }
+
+    // 5) Clear form
+    setQuestion('');
+    setChoices(
+      [
+        { text: '', is_correct: false },
+        { text: '', is_correct: false }
+      ]
+    );
+    setIsSubmitting(false);
+
+    // 6) Notify parent to re‐fetch deck
+    onCreateSuccess();
   };
 
   return (
@@ -167,54 +144,57 @@ const CreateMultipleChoiceCard: React.FC<CreateMCProps> = ({
           />
         </div>
 
-        {/* Question Image Preview */}
-        {questionThumbnail && (
-          <div className="relative">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Question Image
-            </label>
-            <div className="relative inline-block">
-              <img 
-                src={questionThumbnail} 
-                alt="Question preview" 
-                className="h-24 w-auto rounded-lg border border-gray-200"
-              />
-              <button
-                onClick={removeImage}
-                className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 transition-colors"
-              >
-                <X size={14} />
-              </button>
-            </div>
-          </div>
-        )}
-
         {/* Answers Section */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Answer Choices (up to 5)
-          </label>
-          <div className="space-y-4">
+          <div className="flex items-center justify-between mb-3">
+            <label className="block text-sm font-medium text-gray-700">
+              Answer Choices ({choices.length}/10)
+            </label>
+            <button
+              type="button"
+              onClick={addChoice}
+              disabled={choices.length >= 10}
+              className="flex items-center gap-1 px-3 py-1 text-sm rounded-md border border-gray-300 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all hover:scale-105 "
+              style={{ backgroundColor: deckColor || '#3B82F6', color: 'white' }}
+            >
+              <Plus size={16} />
+              Add Choice
+            </button>
+          </div>
+          
+          <div className="space-y-3">
             {choices.map((choice, idx) => (
               <div key={idx} className="flex items-center gap-3">
                 <input
                   type="checkbox"
                   checked={choice.is_correct}
                   onChange={() => handleChoiceCorrectToggle(idx)}
-                  className="h-5 w-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                  className="h-5 w-5 border-gray-300 rounded focus:ring-blue-500"
+                  style={{ accentColor: deckColor }}
+                  readOnly
                 />
                 <input
                   type="text"
-                  value={choice.answer_text}
+                  value={choice.text}
                   onChange={(e) => handleChoiceTextChange(idx, e.target.value)}
                   placeholder={`Choice ${idx + 1}`}
                   className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
+                {choices.length > 2 && (
+                  <button
+                    type="button"
+                    onClick={() => removeChoice(idx)}
+                    className="p-1 text-gray-400 hover:text-red-500 transition-colors"
+                  >
+                    <X size={16} />
+                  </button>
+                )}
               </div>
             ))}
           </div>
-          <p className="mt-2 text-sm text-gray-500">
-            Check the box next to each correct answer. Leave wrong choices blank.
+          
+          <p className="mt-3 text-sm text-gray-500">
+            Check the box next to each correct answer. You need at least 2 choices and 1 correct answer.
           </p>
         </div>
 
@@ -224,12 +204,12 @@ const CreateMultipleChoiceCard: React.FC<CreateMCProps> = ({
             onClick={handleCreateMC}
             style={{ backgroundColor: deckColor || '#3B82F6' }}
             disabled={
-              (!question.trim() && !questionImage) ||
-              choices.filter((c) => c.answer_text.trim() !== '').length < 2 ||
-              !choices.some((c) => c.is_correct && c.answer_text.trim() !== '') ||
+              !question.trim() ||
+              choices.filter((c) => c.text.trim() !== '').length < 2 ||
+              !choices.filter((c) => c.text.trim() !== '').some((c) => c.is_correct) ||
               isSubmitting
             }
-            className="text-white px-6 py-2 rounded-lg hover:scale-105 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+            className="text-white px-6 py-2 rounded-lg hover:scale-105 transition-all font-medium disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isSubmitting ? 'Saving…' : 'Create MC Card'}
           </button>
@@ -239,24 +219,7 @@ const CreateMultipleChoiceCard: React.FC<CreateMCProps> = ({
           >
             Cancel
           </button>
-          <button
-            onClick={() => setShowUploadModal(true)}
-            style={{ backgroundColor: deckColor || '#3B82F6' }}
-            disabled={isSubmitting}
-            className="text-white px-6 py-2 rounded-lg hover:scale-105 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed ml-auto"
-          >
-            <Image className="inline-block" size={20} />
-          </button>
         </div>
-
-        {/* Upload Image Modal */}
-        {showUploadModal && (
-          <ImageUploadModal
-            cardType="mc"
-            onCancel={() => setShowUploadModal(false)}
-            onUpload={handleImageUpload}
-          />
-        )}
       </div>
     </div>
   );

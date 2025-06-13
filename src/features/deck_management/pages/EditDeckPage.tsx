@@ -1,9 +1,7 @@
-// src/pages/EditDeckPage.tsx
 import React from 'react';
 import { useNavigate, useParams, Navigate } from 'react-router-dom';
 import EditDeck from '../components/EditDeck';
 import { useDecks } from '../hooks/useDecks';
-import type { DeckWithCount } from '../hooks/useDecks';
 
 const EditDeckPage: React.FC = () => {
   const { deckId } = useParams<{ deckId: string }>();
@@ -49,7 +47,7 @@ const EditDeckPage: React.FC = () => {
   return (
     <>
       <EditDeck
-        deck={deck as DeckWithCount}
+        deck={deck}
         onCancel={() => navigate('/decks')}
         onUpdateSuccess={handleUpdateSuccess}
         onAddCard={() => navigate(`/decks/${deck.id}/cards/new`)}

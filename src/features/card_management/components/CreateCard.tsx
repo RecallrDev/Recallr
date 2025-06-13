@@ -1,4 +1,3 @@
-// src/components/CreateCard.tsx
 import React, { useState } from 'react';
 import { ArrowLeft } from 'lucide-react';
 import CreateBasicCard from './CreateBasicCard';
