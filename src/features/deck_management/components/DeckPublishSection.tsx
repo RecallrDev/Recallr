@@ -8,14 +8,17 @@ interface DeckPublishSectionProps {
   deckId: string;
   isPublic: boolean;
   onPublishChange: (isPublic: boolean) => void;
+  deckColor: string;
 }
 
 const DeckPublishSection: React.FC<DeckPublishSectionProps> = ({
   deckId,
   isPublic,
   onPublishChange,
+  deckColor,
 }) => {
   const [copySuccess, setCopySuccess] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   const handlePublishToggle = async () => {
     const token = await authTokenManager.getToken();
@@ -23,6 +26,7 @@ const DeckPublishSection: React.FC<DeckPublishSectionProps> = ({
     const headers = await authTokenManager.getAuthHeaders();
 
     try {
+      setIsLoading(true);
       const response = await fetch(`${API_URL}/decks/publish/${deckId}?is_public=${!isPublic}`, {
         method: 'PUT',
         headers,
@@ -34,8 +38,10 @@ const DeckPublishSection: React.FC<DeckPublishSectionProps> = ({
       }
 
       onPublishChange(!isPublic);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Error updating publish status:', err);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -61,15 +67,25 @@ const DeckPublishSection: React.FC<DeckPublishSectionProps> = ({
         </div>
         <button
           onClick={handlePublishToggle}
+          disabled={isLoading}
           className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 ${
-            isPublic ? 'bg-green-500' : 'bg-gray-200'
-          }`}
+            isPublic ? (isLoading ? 'bg-green-500/20' : 'bg-green-500') : 'bg-gray-200'
+          } ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
         >
-          <span
-            className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-              isPublic ? 'translate-x-6' : 'translate-x-1'
-            }`}
-          />
+          {isLoading ? (
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div 
+                className="animate-spin rounded-full h-4 w-4 border-b-2" 
+                style={{ borderColor: deckColor }}
+              ></div>
+            </div>
+          ) : (
+            <span
+              className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                isPublic ? 'translate-x-6' : 'translate-x-1'
+              }`}
+            />
+          )}
         </button>
       </div>
 

@@ -137,6 +137,7 @@ const EditDeck: React.FC<EditDeckProps> = ({
             deckId={deck.id}
             isPublic={isPublic}
             onPublishChange={setIsPublic}
+            deckColor={color}
           />
 
           {/* Actions */}
