@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { authTokenManager } from '../../../util/AuthTokenManager';
 import type { Deck } from '../types/Deck';
 import AuthModal from '../../authentification/components/AuthModal';
-import logo from '../../../assets/logo.svg';
+import LogoLoadingIndicator from '../../../shared/components/LogoLoadingIndicator';
 import { BookOpen, ArrowRight, Share2 } from 'lucide-react';
 
 const API_URL = import.meta.env.VITE_API_URL;
@@ -96,20 +96,7 @@ const PublicDeckPage: React.FC = () => {
   };
 
   if (loading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center">
-        <div className="text-center">
-          <div className="flex justify-center mb-4">
-            <img 
-              src={logo} 
-              alt="Recallr Logo" 
-              className="w-16 h-16 animate-[spin_1s_linear_infinite]"
-            />
-          </div>
-          <p className="text-gray-600">Loading deck...</p>
-        </div>
-      </div>
-    );
+    return <LogoLoadingIndicator loadingText="Loading deck..." />;
   }
 
   if (error || !deck) {
