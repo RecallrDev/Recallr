@@ -2,6 +2,7 @@ import React from 'react';
 import { useNavigate, useParams, Navigate } from 'react-router-dom';
 import EditDeck from '../components/EditDeck';
 import { useDecks } from '../hooks/useDecks';
+import LogoLoadingIndicator from '../../../shared/components/LogoLoadingIndicator';
 
 const EditDeckPage: React.FC = () => {
   const { deckId } = useParams<{ deckId: string }>();
@@ -15,11 +16,7 @@ const EditDeckPage: React.FC = () => {
 
   // Show loading state while decks are being fetched
   if (isLoading) {
-    return (
-      <div className="flex justify-center items-center min-h-screen">
-        <div>Loading deck...</div>
-      </div>
-    );
+    return <LogoLoadingIndicator loadingText="Loading deck..." />;
   }
 
   // Show error state if there was an error fetching decks

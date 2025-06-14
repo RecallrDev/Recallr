@@ -8,6 +8,7 @@ import { CreateCardPage } from '../features/card_management';
 import { ProfilePage } from '../features/profile';
 import { StudyPage } from '../features/study';
 import { ResetPasswordPage, AuthModal, AuthProvider, AuthCallback, ProtectedRoute } from '../features/authentification';
+import PublicDeckPage from '../features/deck_management/pages/PublicDeckPage';
 
 import '../index.css';
 
@@ -40,6 +41,7 @@ const App: React.FC = () => {
             <Route path="/" element={<HomePage />} />
             <Route path="/auth/callback" element={<AuthCallback />} />
             <Route path="/reset-password" element={<ResetPasswordPage />} />
+            <Route path="/public/:deckId" element={<PublicDeckPage />} />
 
             {/* Protected routes */}
             <Route

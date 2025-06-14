@@ -8,4 +8,5 @@ export type Deck = {
   created_at: string;
   cardCount: number;
   isImported?: boolean;
+  is_public?: boolean;
 };
