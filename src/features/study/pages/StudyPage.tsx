@@ -4,6 +4,7 @@ import StudySession from '../components/StudySession';
 import { useDecks } from '../../deck_management';
 import { useCards } from '../../card_management';
 import { authTokenManager } from '../../../util/AuthTokenManager';
+import LogoLoadingIndicator from '../../../shared/components/LogoLoadingIndicator';
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -55,11 +56,7 @@ const StudyPage: React.FC = () => {
     };
 
     if (isLoading) {
-      return (
-        <div className="flex justify-center items-center min-h-screen">
-          <div>Loading study cards…</div>
-        </div>
-      );
+      return <LogoLoadingIndicator loadingText="Loading study cards..." />;
     }
 
     if (error) {
@@ -87,11 +84,7 @@ const StudyPage: React.FC = () => {
 
   // Für nicht-öffentliche Decks: Normale Logik
   if (decksLoading) {
-    return (
-      <div className="flex justify-center items-center min-h-screen">
-        <div>Loading deck...</div>
-      </div>
-    );
+    return <LogoLoadingIndicator loadingText="Loading deck..." />;
   }
 
   if (decksError) {
