@@ -1,5 +1,5 @@
 import React from 'react';
-import { Play, Edit, Plus, Download, Calendar, Hash } from 'lucide-react';
+import { Play, Edit, Plus, Download, Calendar, Hash, Globe } from 'lucide-react';
 import type { Deck } from '../types/Deck';
 import { useNavigate } from 'react-router-dom';
 
@@ -53,16 +53,24 @@ const DeckCard: React.FC<DeckCardProps> = ({ deck, onStudy, onEdit }) => {
           >
             {deck.name}
           </h3>
-          {deck.isImported && (
-            <div className="flex-shrink-0 ml-2">
+          <div className="flex items-center gap-2 flex-shrink-0 ml-2">
+            {deck.is_public && (
+              <div className="bg-white/20 backdrop-blur-sm rounded-full p-2 group/public relative">
+                <Globe size={16} className="text-white" />
+                <div className="absolute -bottom-10 right-0 bg-black/80 text-white text-xs px-2 py-1 rounded-lg opacity-0 group-hover/public:opacity-100 transition-opacity whitespace-nowrap z-10">
+                  Public Deck
+                </div>
+              </div>
+            )}
+            {deck.isImported && (
               <div className="bg-white/20 backdrop-blur-sm rounded-full p-2 group/import relative">
                 <Download size={16} className="text-white" />
                 <div className="absolute -bottom-10 right-0 bg-black/80 text-white text-xs px-2 py-1 rounded-lg opacity-0 group-hover/import:opacity-100 transition-opacity whitespace-nowrap z-10">
                   Imported Deck
                 </div>
               </div>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       </div>
 

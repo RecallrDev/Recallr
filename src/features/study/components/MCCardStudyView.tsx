@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import type { MultipleChoiceCard } from '../../card_management';
 import ImageModal from './ImageDisplayModal';
@@ -12,14 +12,21 @@ const MCCardStudyView: React.FC<{
   const isFirstRender = useRef(true);
   const [expandedImageUrl, setExpandedImageUrl] = useState<string | null>(null);
 
+  // Shuffle choices each time the component is called
+  const shuffledChoices = useMemo(() => {
+    return card.choices
+      .map((choice, originalIndex) => ({ choice, originalIndex }))
+      .sort(() => Math.random() - 0.5);
+  }, [card.id, card.choices]);
+
   useEffect(() => {
     setSelectedIndices([]);
     isFirstRender.current = false;
   }, [card.id]);
 
-  const toggleIndex = (idx: number) => {
+  const toggleIndex = (shuffledIdx: number) => {
     setSelectedIndices(prev =>
-      prev.includes(idx) ? prev.filter(i => i !== idx) : [...prev, idx]
+      prev.includes(shuffledIdx) ? prev.filter(i => i !== shuffledIdx) : [...prev, shuffledIdx]
     );
   };
 
@@ -81,26 +88,26 @@ const MCCardStudyView: React.FC<{
           )}
 
           <div className="space-y-3 flex-1 overflow-y-auto overflow-x-hidden">
-            {card.choices.map((choice, idx) => {
+            {shuffledChoices.map(({ choice, originalIndex }, shuffledIdx) => {
               let bgClass = '';
               if (showAnswer) {
-                if (choice.is_correct && selectedIndices.includes(idx)) bgClass = 'bg-green-50';
-                else if (choice.is_correct && !selectedIndices.includes(idx)) bgClass = 'bg-yellow-50';
-                else if (!choice.is_correct && selectedIndices.includes(idx)) bgClass = 'bg-red-50';
+                if (choice.is_correct && selectedIndices.includes(shuffledIdx)) bgClass = 'bg-green-50';
+                else if (choice.is_correct && !selectedIndices.includes(shuffledIdx)) bgClass = 'bg-yellow-50';
+                else if (!choice.is_correct && selectedIndices.includes(shuffledIdx)) bgClass = 'bg-red-50';
               }
 
               return (
                 <motion.div
-                  key={`${card.id}-choice-${idx}`}
+                  key={`${card.id}-choice-${originalIndex}`}
                   whileHover={!showAnswer ? { scale: 1.02 } : {}}
                   transition={{ duration: 0.15 }}
                   className={`w-full flex items-center gap-3 p-3 rounded-lg ${bgClass} hover:bg-gray-50 cursor-pointer transition-all duration-150 break-words`}
-                  onClick={() => !showAnswer && toggleIndex(idx)}
+                  onClick={() => !showAnswer && toggleIndex(shuffledIdx)}
                 >
                   {!showAnswer ? (
                     <input
                       type="checkbox"
-                      checked={selectedIndices.includes(idx)}
+                      checked={selectedIndices.includes(shuffledIdx)}
                       readOnly
                       className="h-5 w-5 flex-shrink-0 border-gray-300 rounded focus:ring-blue-500"
                       style={{ accentColor: deckColor }}

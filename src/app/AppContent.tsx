@@ -8,6 +8,7 @@ import { CreateCardPage } from '../features/card_management';
 import { ProfilePage } from '../features/profile';
 import { StudyPage } from '../features/study';
 import { ResetPasswordPage, AuthModal, AuthCallback, ProtectedRoute } from '../features/authentification';
+import  EditCardPage  from '../features/card_management/pages/EditCardPage';
 import PublicDeckPage from '../features/deck_management/pages/PublicDeckPage';
 
 const AppContent: React.FC<{
@@ -84,6 +85,15 @@ const AppContent: React.FC<{
           element={
             <ProtectedRoute>
               <StudyPage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/decks/:deckId/cards/:cardId/edit"
+          element={
+            <ProtectedRoute>
+              <EditCardPage />
             </ProtectedRoute>
           }
         />

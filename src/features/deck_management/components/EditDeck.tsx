@@ -2,11 +2,15 @@ import React, { useState } from 'react';
 import { ArrowLeft, Plus } from 'lucide-react';
 import { authTokenManager } from '../../../util/AuthTokenManager';
 import ConfirmDeckDeletionModal from './ConfirmDeckDeletionModal';
+import  DeleteCardModal  from '../../card_management/components/DeleteCardModal';
 import DeckForm from './DeckForm';
 import DeckPublishSection from './DeckPublishSection';
 import { useCards } from '../../card_management/hooks/useCards';
 import CardsView from '../../card_management/components/CardsView';
 import type { Deck } from '../types/Deck';
+import type { Card } from '../../card_management';
+import { useNavigate } from 'react-router-dom';
+
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -32,8 +36,52 @@ const EditDeck: React.FC<EditDeckProps> = ({
   const [loading, setLoading] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
 
+  const navigate = useNavigate();
+
   // FETCH CARDS (no shuffle)
   const { studyCards, isLoading, error, refetch } = useCards(deck.id, false);
+
+  const [cardToDelete, setCardToDelete] = useState<Card | null>(null)
+
+    const handlePromptDeleteCard = (card: Card) => {
+    setCardToDelete(card)
+  }
+
+  const handleConfirmDeleteCard = async () => {
+    if (!cardToDelete) return
+
+    setLoading(true);
+    const token = await authTokenManager.getToken();
+    if (!token) {
+      setLoading(false);
+      return;
+    }
+
+    const headers = await authTokenManager.getAuthHeaders()
+    try {
+      const res = await fetch(
+        `${API_URL}/cards/${cardToDelete.id}`,
+        {
+          method: 'DELETE',
+          headers,
+          body: JSON.stringify({ 
+            id: cardToDelete.id,
+            type: cardToDelete.type,
+          }),
+        }
+      )
+      if (!res.ok) throw new Error(await res.text() || 'Failed to delete card')
+      await refetch()
+    } catch (err) {
+      console.error('Error deleting card:', err)
+    } finally {
+      setCardToDelete(null)
+    }
+  }
+
+  const handleCancelDeleteCard = () => {
+    setCardToDelete(null)
+  }
 
   const handleUpdateDeck = async () => {
     setLoading(true);
@@ -192,12 +240,14 @@ const EditDeck: React.FC<EditDeckProps> = ({
           deck={deck}
           cards={studyCards}
           isLoading={isLoading}
-          onEditCard={(card) => console.log('Edit card:', card)}
-          onDeleteCard={(cardId) => console.log('Delete card:', cardId)}
+          onEditCard={(card) =>
+            navigate(`/decks/${deck.id}/cards/${card.id}/edit`)
+          }
+          onDeleteCard={handlePromptDeleteCard}
           onAddCard={onAddCard}
         />
 
-        {/* Deletion Modal */}
+        {/* Deck Deletion Modal */}
         {showDeleteModal && (
           <ConfirmDeckDeletionModal
             deckName={deck.name}
@@ -208,6 +258,21 @@ const EditDeck: React.FC<EditDeckProps> = ({
             }}
           />
         )}
+
+        {/* Card‑delete modal */}
+        {cardToDelete && (
+          <DeleteCardModal
+            cardLabel={
+              cardToDelete.type === 'basic'
+                ? cardToDelete.front
+                : cardToDelete.question
+            }
+            onCancel={handleCancelDeleteCard}
+            onConfirm={handleConfirmDeleteCard}
+          />
+        )}
+
+
       </div>
     </div>
   );
