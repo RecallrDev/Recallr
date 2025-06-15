@@ -26,12 +26,15 @@ export function useCards(deckId: string | null, shuffle: boolean = true): UseCar
     setError(null);
 
     try {
-      if (!(await authTokenManager.isAuthenticated())) {
-        setError(new Error("No authenticated user"));
-        return;
+      const token = await authTokenManager.getToken();
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+      };
+      
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
       }
 
-      const headers = await authTokenManager.getAuthHeaders();
       const shouldShuffle = shuffleParam !== undefined ? shuffleParam : shuffle;
       const response = await fetch(
         `${API_URL}/cards?deck_id=${deckId}&shuffle=${shouldShuffle}`,
@@ -56,6 +59,7 @@ export function useCards(deckId: string | null, shuffle: boolean = true): UseCar
       setIsLoading(false);
     }
   }, [deckId, shuffle]);
+
   const refetch = useCallback(async () => {
     await fetchCards();
   }, [fetchCards]);

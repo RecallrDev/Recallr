@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { BrowserRouter as Router } from 'react-router-dom';
+import { BrowserRouter as Router} from 'react-router-dom';
 import AppContent from './AppContent';
 import { AuthProvider } from '../features/authentification/AuthContext';
 
