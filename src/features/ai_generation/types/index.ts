@@ -38,6 +38,7 @@ export interface DeckGenerationRequest {
 export interface DeckPreviewRequest {
   source_deck_id: string;
   generation_style: string;
+  target_card_count?: number;
 }
 
 export interface PreviewResponse {

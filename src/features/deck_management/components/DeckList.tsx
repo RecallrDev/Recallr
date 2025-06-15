@@ -62,19 +62,21 @@ const DeckList: React.FC<DeckListProps> = ({
   };
 
   // Success Handler
-  const handleAISuccess = (newDeckId: string) => {
-    console.log('✅ AI Generation successful:', newDeckId);
-    setAiModalOpen(false);
-    setSelectedDeck(null);
-    
-    // Optional: Deck-Liste neu laden
+  const handleAISuccess = async (newDeckId: string) => {
+  console.log('✅ AI Generation successful:', newDeckId);
+  
+  // Modal schließen
+  setAiModalOpen(false);
+  setSelectedDeck(null);
+  
+  // Kurze Verzögerung, dann refresh
+  setTimeout(async () => {
     if (onDeckRefresh) {
-      onDeckRefresh();
+      console.log('🔄 Refreshing deck list after delay...');
+      await onDeckRefresh();
     }
-    
-    // Optional: Zur neuen Deck navigieren
-    // navigate(`/decks/${newDeckId}`);
-  };
+  }, 500); // 500ms Verzögerung
+};
 
   // AI Generation Success für einzelne DeckCards
   const handleDeckAISuccess = (deckId: string) => {

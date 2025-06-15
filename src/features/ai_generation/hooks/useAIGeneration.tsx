@@ -13,6 +13,7 @@ interface GenerationRequest {
 interface PreviewRequest {
   sourceDeckId: string;
   style: string;
+  targetCardCount?: number;
 }
 
 interface GeneratedDeck {
@@ -61,6 +62,7 @@ export const useAIGeneration = () => {
         body: JSON.stringify({
           source_deck_id: request.sourceDeckId,
           generation_style: request.style,
+          target_card_count: request.targetCardCount
         }),
       });
 

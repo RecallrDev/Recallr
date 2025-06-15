@@ -7,7 +7,7 @@ import type { Deck } from '../types/Deck';
 
 const DeckListPage: React.FC = () => {
   const navigate = useNavigate();
-  const { decks, isLoading, error } = useDecks();
+  const { decks, isLoading, error, refetch } = useDecks();
 
   // “Create Deck” button → /decks/new
   const handleCreateDeck = () => navigate('/decks/new');
@@ -21,6 +21,15 @@ const DeckListPage: React.FC = () => {
   const handleEditDeck = (deck: Deck) => {
     console.log(deck.color);
     navigate(`/decks/${deck.id}/edit`);
+  };
+
+  const handleDeckRefresh = async () => {
+    console.log('🔄 DeckListPage: Starting refresh...');
+    console.log('📊 Current deck count:', decks.length);
+    
+    await refetch();
+    
+    console.log('✅ DeckListPage: Refresh completed!');
   };
 
   if (isLoading) {
@@ -63,6 +72,7 @@ const DeckListPage: React.FC = () => {
       onCreateDeck={handleCreateDeck}
       onStudyDeck={handleStudyDeck}
       onEditDeck={handleEditDeck}
+      onDeckRefresh={handleDeckRefresh}
     />
   );
 };

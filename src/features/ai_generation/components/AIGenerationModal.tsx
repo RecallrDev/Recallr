@@ -98,6 +98,7 @@ const AIGenerationModal: React.FC<AIGenerationModalProps> = ({
         body: JSON.stringify({
           source_deck_id: sourceDeckId,
           generation_style: selectedStyle,
+          target_card_count: targetCardCount
         }),
       });
 
