@@ -5,4 +5,5 @@ export * from './components/CreateCard';
 export * from './hooks/useCards';
 export * from './types/Card';
 export * from './types/FlashcardData';
+export * from './components/DeleteCardModal';
 export { default as CreateCardPage } from './pages/CreateCardPage';

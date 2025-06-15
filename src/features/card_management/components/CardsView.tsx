@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { Table, Grid, Edit, Trash2, Plus, Search, X, CreditCard, HelpCircle, CheckCircle2 } from 'lucide-react';
-import type { Card } from '../../../types/Card';
+import type { Card } from '../../card_management/types/Card';
 import type { Deck } from '../../deck_management/types/Deck';
 
 export type CardsViewProps = {
@@ -153,7 +153,7 @@ const CardsView: React.FC<CardsViewProps> = ({
                       backgroundColor: card.type === 'basic' ? '#7C3AED20' : '#10B98120',
                       color: card.type === 'basic' ? '#7C3AED' : '#10B981'
                     }}>
-                      {card.type === 'basic' ? 'Basic' : 'Multiple Choice'}
+                      {card.type === 'basic' ? 'Basic' : 'MC'}
                     </span>
                   </div>
                 </td>
@@ -189,21 +189,19 @@ const CardsView: React.FC<CardsViewProps> = ({
                     </div>
                   )}
                 </td>
-                <td className="px-6 py-4">
-                  <div className="flex items-center gap-2">
+                <td className="px-6 py-4 text-right">
+                  <div className="inline-flex items-center gap-2">
                     <button
                       onClick={() => onEditCard(card)}
-                      className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-blue-600 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 hover:scale-105 transition-all duration-200"
+                      className="p-2 rounded-full bg-blue-50 text-blue-600 hover:bg-blue-100 transition"
                     >
-                      <Edit size={12} />
-                      Edit
+                      <Edit size={16} />
                     </button>
                     <button
                       onClick={() => onDeleteCard(card)}
-                      className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-red-600 bg-red-50 border border-red-200 rounded-lg hover:bg-red-100 hover:scale-105 transition-all duration-200"
+                      className="p-2 rounded-full bg-red-50 text-red-600 hover:bg-red-100 transition"
                     >
-                      <Trash2 size={12} />
-                      Delete
+                      <Trash2 size={16} />
                     </button>
                   </div>
                 </td>
