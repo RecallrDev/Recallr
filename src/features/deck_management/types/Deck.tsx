@@ -9,4 +9,5 @@ export type Deck = {
   cardCount: number;
   isImported?: boolean;
   is_public?: boolean;
+  isAIGenerated?: boolean;
 };
