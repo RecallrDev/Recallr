@@ -10,7 +10,7 @@ export type EditMCCardProps = {
   initialData: {
     question: string;
     front_image: string | null;
-    choices: { answer_text: string; is_correct: boolean }[];
+    choices: { answer_text: string; is_correct: boolean, id: string }[];
   };
   onSaveSuccess: () => void;
   onDeleteSuccess: () => void;
@@ -27,7 +27,7 @@ const EditMCCard: React.FC<EditMCCardProps> = ({
 }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSave = async ({ question, questionImage, choices }: { question: string; questionImage: string | null; choices: { text: string; is_correct: boolean }[] }) => {
+  const handleSave = async ({ question, questionImage, choices }: { question: string; questionImage: string | null; choices: { text: string; is_correct: boolean; id?: string }[] }) => {
     setIsSubmitting(true);
     if (!(await authTokenManager.isAuthenticated())) {
       setIsSubmitting(false);
@@ -42,7 +42,7 @@ const EditMCCard: React.FC<EditMCCardProps> = ({
         type: 'multiple_choice',
         question,
         front_image: questionImage,
-        choices: choices.map((c) => ({ answer_text: c.text, is_correct: c.is_correct })),
+        choices: choices.map((c) => ({ answer_text: c.text, is_correct: c.is_correct, choice_id: c.id })),
       }),
     });
 

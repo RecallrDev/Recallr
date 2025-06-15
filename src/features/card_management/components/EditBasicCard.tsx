@@ -36,7 +36,7 @@ export const EditBasicCard: React.FC<EditBasicCardProps> = ({
     const response = await fetch(`${API_URL}/cards/${cardId}`, {
       method: 'PUT',
       headers,
-      body: JSON.stringify({ front: frontText, back: backText, front_image: frontImage, back_image: backImage })
+      body: JSON.stringify({ front: frontText, back: backText, front_image: frontImage, back_image: backImage, type: 'basic' }),
     });
 
     if (response.ok) {

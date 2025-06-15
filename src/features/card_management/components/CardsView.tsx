@@ -264,7 +264,7 @@ const CardsView: React.FC<CardsViewProps> = ({
                   <div className="w-2 h-2 rounded-full" style={{ backgroundColor: deck.color }} />
                   Question
                 </h4>
-                + <p className="text-sm text-gray-800 line-clamp-1 truncate">
+                <p className="text-sm text-gray-800 line-clamp-1 truncate">
                   {card.type === 'basic' ? card.front : card.question}
                 </p>
               </div>
