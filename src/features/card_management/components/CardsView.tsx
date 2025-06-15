@@ -158,26 +158,60 @@ const CardsView: React.FC<CardsViewProps> = ({
                   </div>
                 </td>
                 <td className="px-6 py-4">
-                  <div className="text-sm text-gray-900 line-clamp-2 max-w-xs">
-                    {card.type === 'basic' ? card.front : card.question}
+                  <div className="text-sm max-w-xs">
+                    {(() => {
+                      const questionText = card.type === 'basic' ? card.front : card.question;
+                      const hasQuestionImage = card.front_image;
+                      const textPart = questionText.trim();
+                      
+                      if (textPart && hasQuestionImage) {
+                        return (
+                          <div>
+                            <div className="text-gray-900 line-clamp-2">{textPart}</div>
+                            <div className="text-gray-400 italic text-xs mt-1">Image content</div>
+                          </div>
+                        );
+                      } else if (textPart) {
+                        return <div className="text-gray-900 line-clamp-2">{textPart}</div>;
+                      } else if (hasQuestionImage) {
+                        return <div className="text-gray-400 italic">Image content</div>;
+                      } else {
+                        return <div className="text-gray-400 italic">No content</div>;
+                      }
+                    })()}
                   </div>
                 </td>
                 <td className="px-6 py-4">
                   {card.type === 'basic' ? (
-                    <div className="text-sm text-gray-600 line-clamp-2 max-w-xs">
-                      {card.back}
+                    <div className="text-sm max-w-xs">
+                      {(() => {
+                        const backText = card.back.trim();
+                        const hasBackImage = card.back_image;
+                        
+                        if (backText && hasBackImage) {
+                          return (
+                            <div>
+                              <div className="text-gray-600 line-clamp-2">{backText}</div>
+                              <div className="text-gray-400 italic text-xs mt-1">Image content</div>
+                            </div>
+                          );
+                        } else if (backText) {
+                          return <div className="text-gray-600 line-clamp-2">{backText}</div>;
+                        } else if (hasBackImage) {
+                          return <div className="text-gray-400 italic">Image content</div>;
+                        } else {
+                          return <div className="text-gray-400 italic">No content</div>;
+                        }
+                      })()}
                     </div>
                   ) : (
                     <div className="space-y-1">
                       {card.choices.slice(0, 2).map((choice) => (
-                        <div key={choice.id} className="flex items-center text-xs">
-                          <div className={`w-2 h-2 rounded-full mr-2 ${
-                            choice.is_correct ? 'bg-green-500' : 'bg-gray-300'
-                          }`} />
+                        <div key={choice.id} className="text-xs">
                           <span className={`line-clamp-1 max-w-[200px] ${
                             choice.is_correct ? 'text-green-700 font-medium' : 'text-gray-600'
-                          }`}>
-                            {choice.answer_text}
+                          } ${!choice.answer_text.trim() ? 'italic text-gray-400' : ''}`}>
+                            {choice.answer_text.trim() || 'No content'}
                           </span>
                         </div>
                       ))}
@@ -264,9 +298,26 @@ const CardsView: React.FC<CardsViewProps> = ({
                   <div className="w-2 h-2 rounded-full" style={{ backgroundColor: deck.color }} />
                   Question
                 </h4>
-                <p className="text-sm text-gray-800 line-clamp-1 truncate">
-                  {card.type === 'basic' ? card.front : card.question}
-                </p>
+                {(() => {
+                  const questionText = card.type === 'basic' ? card.front : card.question;
+                  const hasQuestionImage = card.front_image;
+                  const textPart = questionText.trim();
+                  
+                  if (textPart && hasQuestionImage) {
+                    return (
+                      <div>
+                        <p className="text-sm text-gray-800 line-clamp-1 truncate">{textPart}</p>
+                        <p className="text-xs text-gray-400 italic mt-1">Image content</p>
+                      </div>
+                    );
+                  } else if (textPart) {
+                    return <p className="text-sm text-gray-800 line-clamp-1 truncate">{textPart}</p>;
+                  } else if (hasQuestionImage) {
+                    return <p className="text-sm text-gray-400 italic">Image content</p>;
+                  } else {
+                    return <p className="text-sm text-gray-400 italic">No content</p>;
+                  }
+                })()}
               </div>
 
               {/* Answer */}
@@ -276,28 +327,49 @@ const CardsView: React.FC<CardsViewProps> = ({
                   Answer
                 </h4>
                 {card.type === 'basic' ? (
-                  <p className="text-sm text-gray-600 line-clamp-1 truncate">
-                    {card.back}
-                  </p>
+                  (() => {
+                    const backText = card.back.trim();
+                    const hasBackImage = card.back_image;
+                    
+                    if (backText && hasBackImage) {
+                      return (
+                        <div>
+                          <p className="text-sm text-gray-600 line-clamp-1 truncate">{backText}</p>
+                          <p className="text-xs text-gray-400 italic mt-1">Image content</p>
+                        </div>
+                      );
+                    } else if (backText) {
+                      return <p className="text-sm text-gray-600 line-clamp-1 truncate">{backText}</p>;
+                    } else if (hasBackImage) {
+                      return <p className="text-sm text-gray-400 italic">Image content</p>;
+                    } else {
+                      return <p className="text-sm text-gray-400 italic">No content</p>;
+                    }
+                  })()
                 ) : (
                   <div className="space-y-2">
-                    {card.choices.slice(0, 1).map((choice) => (
-                      <div
-                        key={choice.id}
-                        className={`text-xs p-2 rounded-lg border ${
-                          choice.is_correct
-                            ? 'bg-green-50 border-green-200 text-green-800 font-medium'
-                            : 'bg-gray-50 border-gray-200 text-gray-600'
-                        }`}
-                      >
-                        <div className="flex items-center gap-2">
-                          <div className={`w-1.5 h-1.5 rounded-full ${
-                            choice.is_correct ? 'bg-green-500' : 'bg-gray-400'
-                          }`} />
-                          <span className="line-clamp-1">{choice.answer_text}</span>
+                    {card.choices.slice(0, 1).map((choice) => {
+                      const choiceText = choice.answer_text.trim();
+                      const displayText = choiceText || 'No content';
+                      const isPlaceholder = !choiceText;
+                      
+                      return (
+                        <div
+                          key={choice.id}
+                          className={`text-xs p-2 rounded-lg border ${
+                            choice.is_correct
+                              ? 'bg-green-50 border-green-200 text-green-800 font-medium'
+                              : 'bg-gray-50 border-gray-200 text-gray-600'
+                          }`}
+                        >
+                          <span className={`line-clamp-1 ${
+                            isPlaceholder ? 'italic text-gray-400' : ''
+                          }`}>
+                            {displayText}
+                          </span>
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                     {card.choices.length > 1 && (
                       <div className="text-xs text-gray-400 text-center">
                         +{card.choices.length - 1} more options
