@@ -4,6 +4,8 @@ import UploadAnkiDeck from '../../upload_management/UploadAnkiDeck';
 import DeckList from '../components/DeckList';
 import { useDecks } from '../hooks/useDecks';
 import type { Deck } from '../types/Deck';
+import LogoLoadingIndicator from '../../../shared/components/LogoLoadingIndicator';
+import { Plus } from 'lucide-react';
 
 const DeckListPage: React.FC = () => {
   const navigate = useNavigate();
@@ -33,11 +35,7 @@ const DeckListPage: React.FC = () => {
   };
 
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-full p-6">
-        <p className="text-gray-600 text-lg">Loading decks…</p>
-      </div>
-    );
+    return <LogoLoadingIndicator loadingText="Loading decks..." />;
   }
   if (error) {
     return (
@@ -55,12 +53,13 @@ const DeckListPage: React.FC = () => {
         </p>
         <div className="flex gap-3 justify-center">
           <UploadAnkiDeck onUploadSuccess={handleCreateDeck} />
-          <button
-            onClick={handleCreateDeck}
-            className="bg-purple-600 text-white px-6 py-2 rounded-lg hover:bg-purple-700 transition-colors font-medium"
-          >
-            + Create New Deck
-          </button>
+            <button
+              onClick={handleCreateDeck}
+              className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-xl flex items-center gap-2 font-semibold transition-all duration-200 hover:scale-105 active:scale-95 shadow-lg hover:shadow-xl"
+            >
+              <Plus size={20} />
+              Create Deck
+            </button>
         </div>
       </div>
     );

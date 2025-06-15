@@ -9,12 +9,14 @@ import { config } from '../../../lib/config';
 interface AuthModalProps {
   isOpen: boolean;
   initialView?: 'login' | 'register';
+  redirectUrl?: string;
   onClose: () => void;
 }
 
 const AuthModal: React.FC<AuthModalProps> = ({ 
   isOpen, 
   initialView = 'login',
+  redirectUrl = config.redirectUrls.profile,
   onClose 
 }) => {
   const [isFlipped, setIsFlipped] = useState(initialView === 'register');
@@ -105,7 +107,7 @@ const AuthModal: React.FC<AuthModalProps> = ({
         // Weiterleitung zur Profilseite nach kurzer Verzögerung
         setTimeout(() => {
           onClose();
-          navigate(config.redirectUrls.profile);
+          navigate(redirectUrl);
         }, 1000);
       }
     } catch (error: any) {
