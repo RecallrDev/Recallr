@@ -4,6 +4,7 @@ import UploadAnkiDeck from '../../upload_management/UploadAnkiDeck';
 import DeckList from '../components/DeckList';
 import { useDecks } from '../hooks/useDecks';
 import type { Deck } from '../types/Deck';
+import LogoLoadingIndicator from '../../../shared/components/LogoLoadingIndicator';
 import { Plus } from 'lucide-react';
 
 const DeckListPage: React.FC = () => {
@@ -25,11 +26,7 @@ const DeckListPage: React.FC = () => {
   };
 
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-full p-6">
-        <p className="text-gray-600 text-lg">Loading decks…</p>
-      </div>
-    );
+    return <LogoLoadingIndicator loadingText="Loading decks..." />;
   }
   if (error) {
     return (

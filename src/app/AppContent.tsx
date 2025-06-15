@@ -8,6 +8,7 @@ import { CreateCardPage } from '../features/card_management';
 import { ProfilePage } from '../features/profile';
 import { StudyPage } from '../features/study';
 import { ResetPasswordPage, AuthModal, AuthCallback, ProtectedRoute } from '../features/authentification';
+import PublicDeckPage from '../features/deck_management/pages/PublicDeckPage';
 
 const AppContent: React.FC<{
   openLoginModal: () => void;
@@ -30,6 +31,7 @@ const AppContent: React.FC<{
         <Route path="/" element={<HomePage />} />
         <Route path="/auth/callback" element={<AuthCallback />} />
         <Route path="/reset-password" element={<ResetPasswordPage />} />
+        <Route path="/public/:deckId" element={<PublicDeckPage />} />
 
         {/* Protected routes */}
         <Route

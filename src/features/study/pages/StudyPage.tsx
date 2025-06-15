@@ -1,15 +1,16 @@
 import React from 'react';
-import { useParams, Navigate } from 'react-router-dom';
+import { useParams, Navigate, useLocation } from 'react-router-dom';
 import StudySession from '../components/StudySession';
 import { useDecks } from '../../deck_management';
 import { useCards } from '../../card_management';
 import { authTokenManager } from '../../../util/AuthTokenManager';
-
+import LogoLoadingIndicator from '../../../shared/components/LogoLoadingIndicator';
 
 const API_URL = import.meta.env.VITE_API_URL;
 
 const StudyPage: React.FC = () => {
   const { deckId } = useParams<{ deckId: string }>();
+  const location = useLocation();
   const { decks, isLoading: decksLoading, error: decksError, refetch: refetchDecks } = useDecks();
   const { studyCards, isLoading, error } = useCards(deckId || '');
   const [currentCardIndex, setCurrentCardIndex] = React.useState(0);
@@ -20,16 +21,72 @@ const StudyPage: React.FC = () => {
     return <Navigate to="/decks" replace />;
   }
 
-  // Show loading state while decks are being fetched
-  if (decksLoading) {
+  // Prüfe, ob wir ein öffentliches Deck haben
+  const isPublicDeck = location.state?.isPublic;
+  const publicDeck = location.state?.deck;
+
+  // Wenn es ein öffentliches Deck ist, verwende die Daten aus dem State
+  if (isPublicDeck && publicDeck) {
+    const handleFlipCard = () => setShowAnswer((prev) => !prev);
+
+    const handleNextCard = () => {
+      if (currentCardIndex < studyCards.length - 1) {
+        setCurrentCardIndex((i) => i + 1);
+        setShowAnswer(false);
+      } else {
+        // Bei öffentlichen Decks nur zur Deck-Liste zurückkehren
+        window.location.href = '/decks';
+      }
+    };
+
+    const handlePrevCard = () => {
+      if (currentCardIndex > 0) {
+        setCurrentCardIndex((i) => i - 1);
+        setShowAnswer(false);
+      }
+    };
+
+    const handleResetSession = () => {
+      setCurrentCardIndex(0);
+      setShowAnswer(false);
+    };
+
+    const handleExit = () => {
+      window.location.href = '/decks';
+    };
+
+    if (isLoading) {
+      return <LogoLoadingIndicator loadingText="Loading study cards..." />;
+    }
+
+    if (error) {
+      return (
+        <div className="flex justify-center items-center min-h-screen">
+          <div className="text-red-600">Error loading cards: {error.message}</div>
+        </div>
+      );
+    }
+
     return (
-      <div className="flex justify-center items-center min-h-screen">
-        <div>Loading deck...</div>
-      </div>
+      <StudySession
+        deck={publicDeck}
+        cards={studyCards}
+        currentCardIndex={currentCardIndex}
+        showAnswer={showAnswer}
+        onFlipCard={handleFlipCard}
+        onNextCard={handleNextCard}
+        onPrevCard={handlePrevCard}
+        onReset={handleResetSession}
+        onExit={handleExit}
+      />
     );
   }
 
-  // Show error state if there was an error fetching decks
+  // Für nicht-öffentliche Decks: Normale Logik
+  if (decksLoading) {
+    return <LogoLoadingIndicator loadingText="Loading deck..." />;
+  }
+
   if (decksError) {
     return (
       <div className="flex justify-center items-center min-h-screen">
@@ -38,10 +95,8 @@ const StudyPage: React.FC = () => {
     );
   }
 
-  // Find the deck object by ID
   const deck = decks.find((d) => String(d.id) === String(deckId));
 
-  // If deck not found after loading is complete, redirect
   if (!deck) {
     console.warn(`Deck with ID ${deckId} not found`);
     return <Navigate to="/decks" replace />;
@@ -92,10 +147,12 @@ const StudyPage: React.FC = () => {
       setShowAnswer(false);
     }
   };
+
   const handleResetSession = () => {
     setCurrentCardIndex(0);
     setShowAnswer(false);
   };
+
   const handleExit = () => {
     window.location.href = '/decks';
   };
@@ -107,6 +164,7 @@ const StudyPage: React.FC = () => {
       </div>
     );
   }
+
   if (error) {
     return (
       <div className="flex justify-center items-center min-h-screen">
