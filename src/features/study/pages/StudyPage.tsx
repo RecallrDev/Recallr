@@ -5,6 +5,7 @@ import { useDecks } from '../../deck_management';
 import { useCards } from '../../card_management';
 import { authTokenManager } from '../../../util/AuthTokenManager';
 
+
 const API_URL = import.meta.env.VITE_API_URL;
 
 const StudyPage: React.FC = () => {

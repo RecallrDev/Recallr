@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Image, X } from 'lucide-react';
+import { Image, X, Type, FileText } from 'lucide-react';
 import { ImageUploadModal } from '../../card_image_upload';
 import { type ImageUploadResult } from '../../card_image_upload';
 import { authTokenManager } from '../../../util/AuthTokenManager'
@@ -23,6 +23,7 @@ const CreateBasicCard: React.FC<CreateBasicCardProps> = ({
   const [backText, setBackText] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showUploadModal, setShowUploadModal] = useState(false);
+  const [uploadLocation, setUploadLocation] = useState<'front' | 'back'>('front');
   
   // Image states
   const [frontImage, setFrontImage] = useState<string | null>(null);
@@ -57,21 +58,24 @@ const CreateBasicCard: React.FC<CreateBasicCardProps> = ({
     }
   };
 
+  const openImageUpload = (location: 'front' | 'back') => {
+    setUploadLocation(location);
+    setShowUploadModal(true);
+  };
+
   const handleCreateCard = async () => {
-    if (!frontText.trim() || !backText.trim()) {
+    if ((!frontText.trim() && !frontImage) || (!backText.trim() && !backImage)) {
       return;
     }
 
     setIsSubmitting(true);
 
-    // 1) Authenticate current user
     if (!(await authTokenManager.isAuthenticated())) {
       setIsSubmitting(false);
       console.error('User is not authenticated');
       return;
     }
 
-    // 2) Insert into basic_cards
     const headers = await authTokenManager.getAuthHeaders();
 
     const response = await fetch(`${API_URL}/cards`, {
@@ -93,7 +97,6 @@ const CreateBasicCard: React.FC<CreateBasicCardProps> = ({
       console.error('Error creating card:', insertError);
       setIsSubmitting(false);
     } else {
-      // 3) Clear inputs
       setFrontText('');
       setBackText('');
       setIsSubmitting(false);
@@ -101,127 +104,170 @@ const CreateBasicCard: React.FC<CreateBasicCardProps> = ({
       setBackImage(null);
       setFrontThumbnail(null);
       setBackThumbnail(null);
-
-      // 4) Notify parent so it can re‐fetch counts, etc.
       onCreateSuccess();
     }
   };
 
   return (
-    <div className="max-w-2xl mx-auto p-6">
-      {/* Form Card */}
-      <div className="bg-white rounded-lg shadow-md border border-gray-200 p-6 space-y-6">
-        {/* Front Text */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Front
-          </label>
-          <textarea
-            value={frontText}
-            onChange={(e) => setFrontText(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            placeholder="Enter front text..."
-            rows={3}
-          />
-        </div>
-
-        {/* Front Image Preview */}
-        {frontThumbnail && (
-          <div className="relative">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Front Image
-            </label>
-            <div className="relative inline-block">
-              <img 
-                src={frontThumbnail} 
-                alt="Front preview" 
-                className="h-24 w-auto rounded-lg border border-gray-200"
-              />
-              <button
-                onClick={() => removeImage('front')}
-                className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 transition-colors"
-              >
-                <X size={14} />
-              </button>
-            </div>
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      {/* Front Side */}
+      <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
+        <div 
+          className="px-6 py-4 text-white relative"
+          style={{ backgroundColor: deckColor }}
+        >
+          <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent" />
+          <div className="relative flex items-center gap-2">
+            <Type size={20} />
+            <h3 className="text-lg font-bold">Front Side</h3>
           </div>
-        )}
-
-        {/* Back Text */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Back
-          </label>
-          <textarea
-            value={backText}
-            onChange={(e) => setBackText(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            placeholder="Enter back text..."
-            rows={3}
-          />
         </div>
-
-        {/* Back Image Preview */}
-        {backThumbnail && (
-          <div className="relative">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Back Image
+        
+        <div className="p-6 space-y-4">
+          <div>
+            <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-3">
+              <FileText size={16} />
+              Question/Prompt
             </label>
-            <div className="relative inline-block">
-              <img 
-                src={backThumbnail} 
-                alt="Back preview" 
-                className="h-24 w-auto rounded-lg border border-gray-200"
-              />
-              <button
-                onClick={() => removeImage('back')}
-                className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 transition-colors"
-              >
-                <X size={14} />
-              </button>
-            </div>
+            <textarea
+              value={frontText}
+              onChange={(e) => setFrontText(e.target.value)}
+              className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 text-lg resize-none"
+              placeholder="What do you want to remember?"
+              rows={4}
+            />
           </div>
-        )}
 
-        {/* Actions */}
-        <div className="flex gap-3 pt-2">
-          <button
-            onClick={handleCreateCard}
-            style={{ backgroundColor: deckColor || '#3B82F6' }}
-            disabled={
-              (!frontText.trim() && !frontImage) || 
-              (!backText.trim() && !backImage) || 
-              isSubmitting
-            }
-            className="text-white px-6 py-2 rounded-lg hover:scale-105 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {isSubmitting ? 'Saving…' : 'Create Card'}
-          </button>
-          <button
-            onClick={onCancel}
-            className="bg-white text-gray-600 px-6 py-2 rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors font-medium"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={() => setShowUploadModal(true)}
-            style={{ backgroundColor: deckColor || '#3B82F6' }}
-            disabled={isSubmitting}
-            className="text-white px-6 py-2 rounded-lg hover:scale-105 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed ml-auto"
-          >
-            <Image className="inline-block" size={20} />
-          </button>
+          {/* Show image preview OR upload button, not both */}
+          {frontThumbnail ? (
+            <div className="relative">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Image Preview
+              </label>
+              <div className="relative inline-block">
+                <img 
+                  src={frontThumbnail} 
+                  alt="Front preview" 
+                  className="h-32 w-auto rounded-xl border border-gray-200 shadow-sm"
+                />
+                <button
+                  onClick={() => removeImage('front')}
+                  className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1.5 hover:bg-red-600 transition-colors shadow-lg"
+                >
+                  <X size={16} />
+                </button>
+              </div>
+            </div>
+          ) : (
+            <button
+              onClick={() => openImageUpload('front')}
+              className="w-full flex items-center justify-center gap-2 px-4 py-3 border-2 border-dashed border-gray-300 rounded-xl hover:border-gray-400 hover:bg-gray-50 transition-all duration-200 text-gray-600 hover:text-gray-700"
+            >
+              <Image size={20} />
+              Add Image
+            </button>
+          )}
         </div>
-
-        {/* Upload Image Modal */}
-        {showUploadModal && (
-          <ImageUploadModal
-            cardType="basic"
-            onCancel={() => setShowUploadModal(false)}
-            onUpload={handleImageUpload}
-          />
-        )}
       </div>
+
+      {/* Back Side */}
+      <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
+        <div 
+          className="px-6 py-4 text-white relative"
+          style={{ backgroundColor: deckColor }}
+        >
+          <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent" />
+          <div className="relative flex items-center gap-2">
+            <FileText size={20} />
+            <h3 className="text-lg font-bold">Back Side</h3>
+          </div>
+        </div>
+        
+        <div className="p-6 space-y-4">
+          <div>
+            <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-3">
+              <Type size={16} />
+              Answer/Explanation
+            </label>
+            <textarea
+              value={backText}
+              onChange={(e) => setBackText(e.target.value)}
+              className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 text-lg resize-none"
+              placeholder="What's the answer?"
+              rows={4}
+            />
+          </div>
+
+          {/* Show image preview OR upload button, not both */}
+          {backThumbnail ? (
+            <div className="relative">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Image Preview
+              </label>
+              <div className="relative inline-block">
+                <img 
+                  src={backThumbnail} 
+                  alt="Back preview" 
+                  className="h-32 w-auto rounded-xl border border-gray-200 shadow-sm"
+                />
+                <button
+                  onClick={() => removeImage('back')}
+                  className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1.5 hover:bg-red-600 transition-colors shadow-lg"
+                >
+                  <X size={16} />
+                </button>
+              </div>
+            </div>
+          ) : (
+            <button
+              onClick={() => openImageUpload('back')}
+              className="w-full flex items-center justify-center gap-2 px-4 py-3 border-2 border-dashed border-gray-300 rounded-xl hover:border-gray-400 hover:bg-gray-50 transition-all duration-200 text-gray-600 hover:text-gray-700"
+            >
+              <Image size={20} />
+              Add Image
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* Actions - Full Width */}
+      <div className="lg:col-span-2">
+        <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-6">
+          <div className="flex gap-4">
+            <button
+              onClick={handleCreateCard}
+              disabled={
+                (!frontText.trim() && !frontImage) || 
+                (!backText.trim() && !backImage) || 
+                isSubmitting
+              }
+              className="flex-1 text-white px-8 py-4 rounded-xl font-bold disabled:opacity-50 disabled:cursor-not-allowed hover:scale-105 transition-all duration-200 shadow-lg hover:shadow-xl disabled:hover:scale-100 relative overflow-hidden group"
+              style={{ backgroundColor: deckColor }}
+            >
+              <div className="absolute inset-0 bg-gradient-to-r from-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+              <span className="relative z-10">
+                {isSubmitting ? 'Creating Card...' : 'Create Basic Card'}
+              </span>
+            </button>
+            <button
+              onClick={onCancel}
+              className="px-8 py-4 bg-white border-2 hover:bg-gray-50 transition-all duration-200 font-semibold rounded-xl hover:scale-105"
+              style={{ borderColor: deckColor, color: deckColor }}
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Upload Image Modal */}
+      {showUploadModal && (
+        <ImageUploadModal
+          cardType="basic"
+          onCancel={() => setShowUploadModal(false)}
+          onUpload={(result) => handleImageUpload(result, uploadLocation)}
+        />
+      )}
     </div>
   );
 };

@@ -13,7 +13,7 @@ const DeleteDeckModal: React.FC<DeleteDeckModalProps> = ({ deckName, onCancel, o
   const matches = confirmName.trim() === deckName;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div className="fixed inset-0 bg-black/30 backdrop-blur-sm bg-opacity-70 flex items-center justify-center z-50">
       <div className="bg-white rounded-2xl shadow-lg w-full max-w-md p-6 animate-fade-in">
         {/* Header */}
         <div className="flex items-center justify-between mb-4">
