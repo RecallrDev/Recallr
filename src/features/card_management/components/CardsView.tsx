@@ -276,7 +276,7 @@ const CardsView: React.FC<CardsViewProps> = ({
                   Answer
                 </h4>
                 {card.type === 'basic' ? (
-                  <p className="text-sm text-gray-600 line-clamp-3 leading-relaxed">
+                  <p className="text-sm text-gray-600 line-clamp-1 truncate">
                     {card.back}
                   </p>
                 ) : (

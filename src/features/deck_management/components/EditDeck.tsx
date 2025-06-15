@@ -9,6 +9,8 @@ import { useCards } from '../../card_management/hooks/useCards';
 import CardsView from '../../card_management/components/CardsView';
 import type { Deck } from '../types/Deck';
 import type { Card } from '../../card_management';
+import { useNavigate } from 'react-router-dom';
+
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -33,6 +35,8 @@ const EditDeck: React.FC<EditDeckProps> = ({
   const [isPublic, setIsPublic] = useState(deck.is_public || false);
   const [loading, setLoading] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+
+  const navigate = useNavigate();
 
   // FETCH CARDS (no shuffle)
   const { studyCards, isLoading, error, refetch } = useCards(deck.id, false);
@@ -236,7 +240,9 @@ const EditDeck: React.FC<EditDeckProps> = ({
           deck={deck}
           cards={studyCards}
           isLoading={isLoading}
-          onEditCard={(card) => console.log('Edit card:', card)}
+          onEditCard={(card) =>
+            navigate(`/decks/${deck.id}/cards/${card.id}/edit`)
+          }
           onDeleteCard={handlePromptDeleteCard}
           onAddCard={onAddCard}
         />
