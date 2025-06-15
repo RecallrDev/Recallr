@@ -11,7 +11,7 @@ type ProgressBarProps = {
   onReset: () => void;
 };
 
-const ProgressBar: React.FC<ProgressBarProps> = ({
+const ProgressBar: React.FC<ProgressBarProps> = ({ 
   deck,
   currentCardIndex,
   cards,
@@ -20,54 +20,47 @@ const ProgressBar: React.FC<ProgressBarProps> = ({
   const progressPercent = Math.round(((currentCardIndex + 1) / cards.length) * 100);
 
   return (
-    <div className="bg-white rounded-xl p-6 shadow-lg border border-gray-100 relative">
-      {/* Reset Button - positioned in top right corner */}
-      <button
-        onClick={onReset}
-        title="Reset Study Session"
-        className="absolute top-4 right-4 flex items-center justify-center w-8 h-8 bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-lg text-gray-500 hover:text-gray-700 transition-all duration-200 hover:scale-110 active:scale-95"
-      >
-        <RotateCcw size={14} />
-      </button>
-
-      {/* Header */}
-      <div className="flex justify-between items-center mb-4 pr-10">
-        <h1 className="text-2xl font-bold text-gray-800 truncate">{deck.name}</h1>
-        <div className="flex items-center gap-2 bg-gray-50 px-3 py-2 rounded-lg">
-          <div 
-            className="w-3 h-3 rounded-full flex-shrink-0"
-            style={{ backgroundColor: deck.color }}
-          />
-          <span className="text-sm font-medium text-gray-600 whitespace-nowrap">
+    <div className="w-full">
+      {/* Top row: Progress label, fraction, reset button */}
+      <div className="flex items-center justify-between mb-2 sm:mb-3 gap-2">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:gap-4">
+          <span className="text-xs sm:text-sm font-medium text-gray-600">Progress</span>
+          <span className="text-xs sm:text-sm font-semibold text-gray-700">
             {currentCardIndex + 1} of {cards.length}
           </span>
         </div>
+
+        {/* Reset Button */}
+        <button
+          onClick={onReset}
+          title="Reset Study Session"
+          className="flex items-center justify-center w-8 h-8 bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-lg text-gray-500 hover:text-gray-700 transition-all duration-200 hover:scale-110 active:scale-95 shrink-0"
+        >
+          <RotateCcw size={14} />
+        </button>
       </div>
 
-      {/* Progress Bar */}
-      <div className="relative">
-        <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
-          <div
-            className="h-full rounded-full transition-all duration-500 ease-out"
-            style={{
-              width: `${progressPercent}%`,
-              backgroundColor: deck.color,
-            }}
-          />
-        </div>
-        
-        {/* Progress text */}
-        <div className="flex justify-between items-center mt-2">
-          <span className="text-xs text-gray-500">Start</span>
-          <span 
-            className="text-sm font-semibold px-2 py-1 rounded-full text-white"
-            style={{ backgroundColor: deck.color }}
-          >
-            {progressPercent}%
-          </span>
-          <span className="text-xs text-gray-500">Complete</span>
+      {/* Progress bar */}
+      <div className="w-full bg-gray-100 rounded-full h-1.5 sm:h-2 overflow-hidden">
+        <div
+          className="h-full rounded-full transition-all duration-700 ease-out relative overflow-hidden"
+          style={{ 
+            width: `${progressPercent}%`,
+            backgroundColor: deck.color
+          }}
+        >
+          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-pulse" />
         </div>
       </div>
+
+      {/* Percentage text */}
+      {progressPercent > 0 && (
+        <div className="text-right mt-1">
+          <span className="text-xs text-gray-500 hidden sm:inline">
+            {progressPercent}%
+          </span>
+        </div>
+      )}
     </div>
   );
 };

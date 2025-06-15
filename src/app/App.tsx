@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { HomePage } from '../features/homepage';
 import { Navbar, Footer } from './shared';
 import { DeckListPage, CreateDeckPage, EditDeckPage } from '../features/deck_management';
@@ -9,6 +9,8 @@ import { ProfilePage } from '../features/profile';
 import { StudyPage } from '../features/study';
 import { ResetPasswordPage, AuthModal, AuthProvider, AuthCallback, ProtectedRoute } from '../features/authentification';
 import PublicDeckPage from '../features/deck_management/pages/PublicDeckPage';
+import AppContent from './AppContent';
+import { AuthProvider } from '../features/authentification/AuthContext';
 
 import '../index.css';
 
@@ -108,6 +110,13 @@ const App: React.FC = () => {
           />
         </div>
         <Footer />
+        <AppContent
+          openLoginModal={openLoginModal}
+          openRegisterModal={openRegisterModal}
+          isAuthModalOpen={isAuthModalOpen}
+          authModalView={authModalView}
+          closeAuthModal={closeAuthModal}
+        />
       </Router>
     </AuthProvider>
   );

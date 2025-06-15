@@ -258,7 +258,7 @@ const CardsView: React.FC<CardsViewProps> = ({
           </div>
 
           {/* Card Content */}
-          <div className="flex-1 p-6 flex flex-col justify-between">
+          <div className="flex-1 p-6 flex flex-col overflow-hidden">
             <div className="space-y-4">
               {/* Question */}
               <div>
@@ -266,7 +266,7 @@ const CardsView: React.FC<CardsViewProps> = ({
                   <div className="w-2 h-2 rounded-full" style={{ backgroundColor: deck.color }} />
                   Question
                 </h4>
-                <p className="text-sm text-gray-800 line-clamp-3 leading-relaxed">
+                + <p className="text-sm text-gray-800 line-clamp-1 truncate">
                   {card.type === 'basic' ? card.front : card.question}
                 </p>
               </div>
@@ -283,7 +283,7 @@ const CardsView: React.FC<CardsViewProps> = ({
                   </p>
                 ) : (
                   <div className="space-y-2">
-                    {card.choices.slice(0, 3).map((choice) => (
+                    {card.choices.slice(0, 1).map((choice) => (
                       <div
                         key={choice.id}
                         className={`text-xs p-2 rounded-lg border ${
@@ -300,9 +300,9 @@ const CardsView: React.FC<CardsViewProps> = ({
                         </div>
                       </div>
                     ))}
-                    {card.choices.length > 3 && (
+                    {card.choices.length > 1 && (
                       <div className="text-xs text-gray-400 text-center">
-                        +{card.choices.length - 3} more options
+                        +{card.choices.length - 1} more options
                       </div>
                     )}
                   </div>
@@ -311,7 +311,7 @@ const CardsView: React.FC<CardsViewProps> = ({
             </div>
 
             {/* Action Buttons */}
-            <div className="flex gap-2 pt-4">
+            <div className="flex gap-2 pt-4 mt-auto">
               <button
                 onClick={() => onEditCard(card)}
                 className="flex-1 flex items-center justify-center gap-2 px-3 py-2 text-sm font-medium text-blue-600 bg-blue-50 border border-blue-200 rounded-xl hover:bg-blue-100 hover:scale-105 transition-all duration-200"

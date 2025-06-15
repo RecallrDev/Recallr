@@ -60,7 +60,7 @@ const DeckList: React.FC<DeckListProps> = ({
             <UploadAnkiDeck onUploadSuccess={onCreateDeck} />
             <button
               onClick={onCreateDeck}
-              className="bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white px-6 py-3 rounded-xl flex items-center gap-2 font-semibold transition-all duration-200 hover:scale-105 active:scale-95 shadow-lg hover:shadow-xl"
+              className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-xl flex items-center gap-2 font-semibold transition-all duration-200 hover:scale-105 active:scale-95 shadow-lg hover:shadow-xl"
             >
               <Plus size={20} />
               Create Deck
